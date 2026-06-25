@@ -163,6 +163,7 @@ ggplot2::ggplot() + inlabru::gg(mesh) +
 
 
 
+
 ##' Model  for density ----------------------------------------------------
 ##' 
 ##' 
@@ -258,7 +259,7 @@ cmp_joint <-    ~   -1 +
 
 formula_gamma_plast  <- y_plast ~    
   year_gamma_plast + 
-  field_z1 +
+  #field_z1 +
   depth_gamma_plast +
   driver_gamma_plast +
   dcoast_gamma_plast +
@@ -272,8 +273,8 @@ formula_gamma_plast  <- y_plast ~
 #formula for y_Nplastic - as above
 formula_gamma_Nplast  <- y_Nplast ~     
   year_gamma_Nplast +
-  field_z2 +
-  field_common1 +
+  #field_z2 +
+  #field_common1 +
   depth_gamma_Nplast +
   driver_gamma_Nplast +
   dcoast_gamma_Nplast +
@@ -288,9 +289,9 @@ formula_gamma_Nplast  <- y_Nplast ~
 #formula for z ==> common fields with y here!!!
 formula_bin_plast <- z_plast ~ 
   year_bin_plast + 
-  field_z3 + 
-  field_common2 +
-  field_common3 +
+  #field_z3 + 
+  #field_common2 +
+  #field_common3 +
   depth_bin_plast + 
   slope_bin_plast +
   driver_bin_plast + 
@@ -305,10 +306,10 @@ formula_bin_plast <- z_plast ~
 #' This is monstrous
 formula_bin_Nplast <- z_Nplast ~
   year_bin_Nplast + 
-  field_z4 + 
-  field_common4 +
-  field_common5 +
-  field_common6 +
+  #field_z4 + 
+  #field_common4 +
+  #field_common5 +
+  #field_common6 +
   depth_bin_Nplast + 
   slope_bin_Nplast +
   driver_bin_Nplast +
@@ -346,9 +347,7 @@ lik_bin_Nplast <- bru_obs("binomial",
                           data = df.sp)
 
 
-##' NOW comes the final boss ---------------------------------------------------
-##' 
-
+ 
 
 
 fit_joint <- bru(
@@ -357,7 +356,6 @@ fit_joint <- bru(
     control.predictor=list(link = 1),
     control.compute = c.c,
     #control.inla = list(h=1e-6),
-    bru_max_iter=1, verbose = T, num.threads = 8 ))
-
+    bru_max_iter=1, verbose = T, num.threads = 1 ))
 
 

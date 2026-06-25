@@ -1,0 +1,803 @@
+##' Preliminary settings -------------------------------------------------------
+
+##' IMPORTANT - download INLA !! 
+
+if(!rlang::is_installed("INLA")){
+  install.packages("INLA", 
+                   repos=c(getOption("repos"), INLA="https://inla.r-inla-download.org/R/testing"),
+                   dep=TRUE)
+}
+
+CRAN.packages <- c("inlabru", "terra", "tidyverse", "lubridate", "sf", "raster", 
+                   "scico", "patchwork", "sp", "geodata", "spatstat.geom", "knitr")
+
+for(p in CRAN.packages) if(!rlang::is_installed(p)) install.packages(p)
+
+
+library(INLA)
+library(inlabru)
+#library(tidyverse)
+#library(ggplot2)
+library(magrittr)
+#library(lubridate)
+library(sf)
+library(raster)
+library(rlang)
+library(scico)
+library(patchwork)
+library(sp)
+#library(geodata)
+library(spatstat.geom)
+
+
+##' Define coordinate reference system
+kmproj <- CRS("+proj=utm +zone=33  +ellps=WGS84 +units=km +no_defs")
+ 
+##' Reference grid
+r0 <- raster(xmn= 450, ymn= 4000, xmx = 900,ymx = 4550, resolution = 1,
+             crs = kmproj)
+
+##' Load all needed data here 
+input.files <- list.files("Input", full.names=T)
+for (i in seq_along(input.files)) load(input.files[i])
+
+
+##' customised theme for maps -------------------------------------------------#
+theme_map <-  ggplot2::theme_light() + 
+  ggplot2::theme(axis.ticks.x = ggplot2::element_blank(),
+                 axis.text.x = ggplot2::element_blank(),
+                 axis.ticks.y = ggplot2::element_blank(),
+                 axis.text.y = ggplot2::element_blank(),
+                 axis.title.x = ggplot2::element_blank(),
+                 axis.title.y = ggplot2::element_blank()) 
+
+##' Options for INLA and inlabru ----------------------------------------------#
+
+bru_options_set(bru_verbose = 1)
+c.c <- list(cpo=TRUE, dic=TRUE,  
+            waic=TRUE, config=TRUE, internal.opt = FALSE)
+
+##' GUESS: this should be how `lonlatproj` was defined 
+##' 
+lonlatproj <- sp::CRS("+proj=longlat +datum=WGS84 +no_defs")
+ 
+
+border.ll <- SpatialPolygons(list(Polygons(list(Polygon(poly3)),"0")),proj4string=lonlatproj)
+border <- spTransform(border.ll, kmproj)
+##' extent - useful for plots
+r0.ext <- raster::extent(r0)
+##' Standardise covariates -----------------------------------------------------
+
+sd.u <- sd(df$u)
+sd.v <- sd(df$v)
+sd.logfe <- sd(df$logfe)
+sd.fe <- sd(df$fe)
+sd.popRadius <- sd(df$popRadius)
+
+sd.depth <- sd(depth_SPDF@data$depth, na.rm = T)
+sd.slope <- sd(slope_SPDF@data$slope, na.rm = T)
+sd.dcoast <- sd(dist_coast_SPDF@data$dist_coast, na.rm = T)
+sd.driver <- sd(dist_river_SPDF@data$dist_river, na.rm = T)
+sd.dharbour <- sd(dist_harbour_SPDF@data$dist_harbour, na.rm = T)
+
+df_scaled <- df %>% 
+  dplyr::mutate(u = .data$u/sd.u) %>% 
+  dplyr::mutate(v = .data$v/sd.v) %>% 
+  dplyr::mutate(logfe = .data$logfe/sd.logfe) %>% 
+  dplyr::mutate(fe = .data$fe/sd.fe) %>% 
+  dplyr::mutate(popRadius = .data$popRadius/sd.popRadius) %>% 
+  dplyr::mutate(depth = .data$depth/sd.depth) %>% 
+  dplyr::mutate(slope = .data$slope/sd.slope) %>% 
+  dplyr::mutate(dist_coast= .data$dist_coast/sd.dcoast) %>% 
+  dplyr::mutate(dist_river= .data$dist_river/sd.driver) %>% 
+  dplyr::mutate(dist_harbour = .data$dist_harbour/sd.dharbour)
+  
+
+cov.spdf <- list(depth_SPDF, dist_coast_SPDF, dist_harbour_SPDF, 
+              dist_river_SPDF,  slope_SPDF)
+
+for(i in seq_along(cov.spdf)){
+  tmp_SPDF <- cov.spdf[[i]]
+  tmp_SPDF@data[,1] <- tmp_SPDF@data[,1]/sd(tmp_SPDF@data[,1], na.rm=T)
+  assign(paste0(names(tmp_SPDF@data)[1], "_SPDF_scaled"), tmp_SPDF)
+}
+
+pxl_all_scaled <- pxl_all  %>% 
+  dplyr::mutate(u = .data$u/sd.u) %>% 
+  dplyr::mutate(v = .data$v/sd.v) %>% 
+  dplyr::mutate(logfe = .data$logfe/sd.logfe) %>% 
+  dplyr::mutate(fe = .data$fe/sd.fe) %>% 
+  dplyr::mutate(popRadius = .data$popRadius/sd.popRadius) %>% 
+  dplyr::mutate(depth = .data$depth/sd.depth) %>% 
+  dplyr::mutate(slope = .data$slope/sd.slope) %>% 
+  dplyr::mutate(dist_coast= .data$dist_coast/sd.dcoast) %>% 
+  dplyr::mutate(dist_river= .data$dist_river/sd.driver) %>% 
+  dplyr::mutate(dist_harbour = .data$dist_harbour/sd.dharbour)
+
+
+
+
+##' Mesh building -----------------.--------------------------------------------
+
+ 
+##' The sp object will also be useful later
+df.sp <- as(df_scaled, "Spatial")
+crs(df.sp) <- kmproj
+coord.df <- coordinates(df.sp)
+colnames(coord.df) <- c("x","y")
+
+
+mesh <- fmesher::fm_mesh_2d_inla(
+  boundary = border,
+  loc= coord.df,
+  max.edge = c(13,30),
+  min.angle = 25,
+  cutoff = 5,
+  offset = c(10, 40),
+  crs = kmproj)
+
+
+ggplot2::ggplot() + inlabru::gg(mesh) +
+  ggplot2::geom_point(
+    data = data.frame(coord.df), 
+    ggplot2::aes(x,y ), col="red") +
+  ggplot2::geom_sf(data = italy_sf, alpha = 0.3, fill = "white") +
+  theme_map + 
+  ggplot2::coord_sf(xlim=c(400, 850), ylim=c(4015, 4520)) +
+  #ggplot2::theme_classic()+
+  ggplot2::ggtitle("Mesh and observation points")
+##' save plot with custom size 8.00 x 6.00
+
+
+##' Null models ---------------------------------------------------------------
+
+##' GLM here ------------------------------------------------------------------#
+##' 
+##' Plastic density
+fit_gamma_glm_plast <-glm(
+  plast ~ 0 + factor(year) + u + v + popRadius + 
+    logfe + dist_river + dist_coast + dist_harbour + slope + depth + I(depth^2),
+  family = Gamma(link = "log"),
+  data = dplyr::filter(df, .data$plast>0) )
+summary(fit_gamma_glm_plast)
+##' non-plastic density
+fit_gamma_glm_Nplast <-glm(
+  Nplast ~ 0 + factor(year) + u + v + popRadius + 
+    logfe + dist_river + dist_coast + dist_harbour + slope + depth + I(depth^2),
+  family = Gamma(link = "log"),
+  data = dplyr::filter(df, .data$Nplast>0) )
+summary(fit_gamma_glm_Nplast)
+##' just depth and distance from rivers/harbours
+
+fit_binomial_glm_plast <-glm(
+  z_plast ~ 0 + factor(year) + u + v + popRadius + 
+    logfe + dist_river + dist_coast + dist_harbour + slope + depth + I(depth^2),
+  family = "binomial",
+  data = df )
+summary(fit_binomial_glm_plast)
+
+
+
+fit_binomial_glm_Nplast <-glm(
+  z_Nplast ~ 0 + factor(year) + u + v + popRadius + 
+    logfe + dist_river + dist_coast + dist_harbour + slope + depth + I(depth^2),
+  family = "binomial",
+  data = df )
+summary(fit_binomial_glm_Nplast)
+
+
+##' Add nonlinear terms - splines ---------------------------------------------#
+fit_gamma_gam_plast <- mgcv::gam(
+  plast ~ 0 +
+    s(logfe) +
+    factor(year) + u + v + popRadius + dist_river + dist_coast + dist_harbour + slope + s(depth),
+  family = Gamma(link = "log"),
+  data = dplyr::filter(df, .data$plast>0) )
+summary(fit_gamma_gam_plast)
+
+
+df.in <- st_drop_geometry(df) %>% dplyr::select(
+  .data$u, .data$v, .data$popRadius, .data$logfe, .data$dist_river, .data$dist_coast, 
+  .data$dist_harbour, .data$slope)
+n.row <- nrow(df)
+
+df.mvlist <- lapply(df.in, function(X){
+  matrix(c(X, rep(NA, 2*n.row), X), ncol=2,  nrow=2*n.row, byrow=F)
+})
+df.mvlist$Y <- matrix(
+  c(df$y_plast, rep(NA, 2*n.row), df$y_Nplast),
+  nrow=2*n.row, ncol = 2, byrow = FALSE)
+df.mvlist$Z <- matrix(
+  c(df$z_plast, rep(NA, 2*n.row), df$z_Nplast),
+  nrow=2*n.row, ncol = 2, byrow = FALSE)
+df.mvlist$year <-rep(df$year, 2)
+df.mvlist$depth <- rep(df$depth, 2)
+
+##' For later - maybe use `control.predictor = list(..., link = "log")`
+##' instead of link=1
+
+##' Nonspatial model - what happens here?
+fit_gamma_nosp <- inla(
+  Y ~ 0 + u + v + logfe + dist_river + dist_coast + dist_harbour + slope +  popRadius +
+    f(year, model = "iid",  hyper=list(theta=list(prior="loggamma",fixed = T, initial = log(0.001)))) +
+    f(depth,  model = "rw2",    scale.model = TRUE),
+  family = c("gamma", "gamma"), data = df.mvlist, control.compute = c.c,
+  verbose = T, num.threads = 1)
+
+ggplot2::ggplot(fit_gamma_nosp$summary.random$depth,  ggplot2::aes(x = ID, y = `0.5quant`)) +
+  ggplot2::geom_ribbon( ggplot2::aes(ymin = `0.025quant`,ymax = `0.975quant`),alpha = 0.3  ) +
+  ggplot2::geom_line(linewidth = 1) +
+  ggplot2::labs(x = "Depth",y = "Effect on plastic density"  ) +
+  ggplot2::theme_minimal()
+
+
+##' Nonspatial model - what happens here?
+fit_bin_nosp <- inla(
+  Z ~ 0 + u + v + logfe + dist_river + dist_coast +dist_harbour+ slope +  popRadius +
+    f(year, model = "iid",  hyper=list(theta=list(prior="loggamma",fixed = T, initial = log(0.001)))) +
+    f(depth,  model = "rw2",    scale.model = TRUE),
+  family = c("binomial", "binomial"), data = df.mvlist, control.compute = c.c,
+  verbose = T, num.threads = 1)
+
+ggplot2::ggplot(fit_bin_nosp$summary.random$depth,  ggplot2::aes(x = ID, y = `0.5quant`)) +
+  ggplot2::geom_ribbon( ggplot2::aes(ymin = `0.025quant`,ymax = `0.975quant`),alpha = 0.3  ) +
+  ggplot2::geom_line(linewidth = 1) +
+  ggplot2::labs(x = "Depth",y = "Effect on plastic density"  ) +
+  ggplot2::theme_minimal()
+# Ok we can use a linear effect then...
+
+##' Model  for density ----------------------------------------------------
+##' 
+##' 
+##' define SPDE and PC priors
+prior.range <- c(100, .5)
+spde_gamma <- inla.spde2.pcmatern(mesh, prior.range = prior.range, #  Pr(practic.range<150 km)=0.5
+                                  prior.sigma = c(1, .1))  #  P(sigma>1)=0.5 
+
+
+spde_bin <- inla.spde2.pcmatern(mesh, prior.range = prior.range,  # Pr(practic.range<150 km)=0.5
+                                prior.sigma = c(1, .1))  #  P(sigma>1)=0.5 
+
+
+
+values  <- sort(unique(inla.group(df$depth)))
+values2 <- sort(unique(inla.group(df$dist_river)))
+values3 <- sort(unique(inla.group(df$dist_coast)))
+
+
+## define the model components
+
+
+cmp_gamma <-    ~   -1 +
+  ##' time dependent intercepts
+  year_gamma_plast(year, model = "iid", hyper=list(theta=list(prior="loggamma",fixed = T,
+                                                              initial = log(0.001)))) + 
+  year_gamma_Nplast(year, model = "iid", hyper=list(theta=list(prior="loggamma",fixed = T,
+                                                               initial = log(0.001)))) +
+  ##' matern fields
+  field_z1(coordinates, model = spde_gamma, replicate = year, nrep = 11) +
+  field_z1_fix(coordinates, model = spde_gamma) +
+  field_z2(coordinates, model =  spde_gamma, replicate = year,  nrep = 11) +
+  field_z2_fix(coordinates, model = spde_gamma) +
+  field_common1(coordinates, copy="field_z1", fixed=F, group=year,
+                hyper =  list(beta = list(prior =  "gaussian", param = c(0,10)))) +
+  field_common1_fix(coordinates, copy="field_z1_fix", fixed=F,  
+                hyper =  list(beta = list(prior =  "gaussian", param = c(0,10)))) +
+  ##' non linear covariates
+  depth_gamma_plast(depth_SPDF,  model = "rw2", main_layer = "depth",
+                    values = values, scale.model = TRUE) +
+  depth_gamma_Nplast(depth_SPDF,  model = "rw2", main_layer = "depth",
+                     values = values, scale.model = TRUE) +
+  ##' linear covariates
+  u_gamma_plast(u,main_layer = "u") +
+  v_gamma_plast(v,main_layer = "v") +
+  logfe_gamma_plast(logfe,main_layer = "logfe") +
+  pop_radius_gamma_plast(popRadius, main_layer = "popRadius")+
+  u_gamma_Nplast(u,main_layer = "u") +
+  v_gamma_Nplast(v,main_layer = "v") +
+  logfe_gamma_Nplast(logfe,main_layer = "logfe")+
+  pop_radius_gamma_Nplast(popRadius, main_layer = "popRadius")+
+  driver_gamma_plast(dist_river_SPDF_scaled,main_layer =   "dist_river") +
+  dcoast_gamma_plast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
+  dharbour_gamma_plast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
+  slope_gamma_plast(slope_SPDF_scaled,main_layer = "slope") +
+  driver_gamma_Nplast(dist_river_SPDF_scaled,main_layer =   "dist_river") +
+  dcoast_gamma_Nplast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
+  dharbour_gamma_Nplast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
+  slope_gamma_Nplast(slope_SPDF_scaled,main_layer = "slope") 
+
+# formula for Plastic  
+formula_gamma_plast  <- y_plast ~    
+  year_gamma_plast + 
+  field_z1 +
+  depth_gamma_plast +
+  driver_gamma_plast +
+  dcoast_gamma_plast +
+  dharbour_gamma_plast +
+  slope_gamma_plast +
+  pop_radius_gamma_plast +
+  u_gamma_plast + v_gamma_plast + logfe_gamma_plast
+
+formula_gamma_plast_fix  <- y_plast ~    
+  year_gamma_plast + 
+  field_z1_fix +
+  depth_gamma_plast +
+  driver_gamma_plast +
+  dcoast_gamma_plast +
+  dharbour_gamma_plast +
+  slope_gamma_plast +
+  pop_radius_gamma_plast +
+  u_gamma_plast + v_gamma_plast + logfe_gamma_plast
+
+
+
+#formula for NPlastic  
+formula_gamma_Nplast  <- y_Nplast ~     
+  year_gamma_Nplast +
+  field_z2 +
+  field_common1 +
+  depth_gamma_Nplast +
+  driver_gamma_Nplast +
+  dcoast_gamma_Nplast +
+  dharbour_gamma_Nplast +
+  slope_gamma_Nplast +
+  pop_radius_gamma_Nplast +
+  u_gamma_Nplast +
+  v_gamma_Nplast + 
+  logfe_gamma_Nplast
+
+formula_gamma_Nplast_fix  <- y_Nplast ~     
+  year_gamma_Nplast +
+  field_z2_fix +
+  field_common1_fix +
+  depth_gamma_Nplast +
+  driver_gamma_Nplast +
+  dcoast_gamma_Nplast +
+  dharbour_gamma_Nplast +
+  slope_gamma_Nplast +
+  pop_radius_gamma_Nplast +
+  u_gamma_Nplast +
+  v_gamma_Nplast + 
+  logfe_gamma_Nplast
+ 
+# define like objects
+lik_gamma_plast <- bru_obs("gamma",
+                           formula = formula_gamma_plast,
+                           samplers = border,
+                           domain = list(coordinates = mesh),
+                           data = df.sp)
+lik_gamma_plast_fix <- bru_obs("gamma",
+                           formula = formula_gamma_plast_fix,
+                           samplers = border,
+                           domain = list(coordinates = mesh),
+                           data = df.sp)
+
+lik_gamma_Nplast <- bru_obs("gamma",
+                            formula = formula_gamma_Nplast,
+                            samplers = border,
+                            domain = list(coordinates = mesh),
+                            data = df.sp)
+
+lik_gamma_Nplast_fix <- bru_obs("gamma",
+                            formula = formula_gamma_Nplast_fix,
+                            samplers = border,
+                            domain = list(coordinates = mesh),
+                            data = df.sp)
+
+
+ 
+fit_gamma <-bru(
+  cmp_gamma,  lik_gamma_plast, lik_gamma_Nplast,
+  options = list( # control.family = list(link = "log"),
+    control.predictor=list(link = 1),
+    control.compute = c.c,
+    #control.inla = list(h=1e-6),
+    bru_max_iter=1, verbose = T ))
+
+
+fit_gamma_fix <-bru(
+  cmp_gamma,  lik_gamma_plast_fix, lik_gamma_Nplast_fix,
+  options = list( # control.family = list(link = "log"),
+    control.predictor=list(link = 1),
+    control.compute = c.c,
+    #control.inla = list(h=1e-6),
+    bru_max_iter=1, verbose = T ))
+
+##' Miscellaneous diagnostics for density model --------------------------------
+
+ggplot2::ggplot(fit_gamma$summary.random$depth_gamma_plast,  ggplot2::aes(x = ID, y = `0.5quant`)) +
+  ggplot2::geom_ribbon( ggplot2::aes(ymin = `0.025quant`,ymax = `0.975quant`),alpha = 0.3  ) +
+  ggplot2::geom_line(linewidth = 1) +
+  ggplot2::labs(x = "Depth",y = "Effect on plastic density"  ) +
+  ggplot2::theme_minimal()
+
+
+ggplot2::ggplot(fit_gamma$summary.random$depth_gamma_Nplast,  ggplot2::aes(x = ID, y = `0.5quant`)) +
+  ggplot2::geom_ribbon( ggplot2::aes(ymin = `0.025quant`,ymax = `0.975quant`),alpha = 0.3  ) +
+  ggplot2::geom_line(linewidth = 1) +
+  ggplot2::labs(x = "Depth",y = "Effect on non-plastic density") +
+  ggplot2::theme_minimal()
+
+
+knitr::kable(fit_gamma$summary.fixed[,c(1,2,3,5)], digits = 3)
+
+
+knitr::kable(fit_gamma$summary.hyperpar[,c(1,2,3,5)], digits = 3)
+inla.zmarginal(inla.tmarginal(fun = function(x) 1/sqrt(x),
+                              marginal=fit_gamma$marginals.hyperpar[[1]]))
+
+
+#### Predictions
+
+
+lambda_plast <- predict(
+  fit_gamma, sf::as_Spatial(pxl_all[,-c(4,5)]), 
+  ~ exp(year_gamma_plast +  field_z1 +
+          depth_gamma_plast +
+          driver_gamma_plast + 
+          dcoast_gamma_plast +
+          dharbour_gamma_plast +
+          slope_gamma_plast + 
+          u_gamma_plast + 
+          v_gamma_plast + 
+          logfe_gamma_plast +
+          pop_radius_gamma_plast  ), verbose=T)
+
+summary(lambda_plast)
+dplyr::glimpse(lambda_plast)
+
+ggplot2::ggplot() +
+  inlabru::gg(dplyr::filter(sf::st_as_sf(lambda_plast), .data$year ==4), ggplot2::aes(colour = median)) +
+  scico::scale_fill_scico(palette = "bilbao",direction=1) + theme_map+
+  ggplot2::geom_sf(data = italy_sf, alpha = 0.3, fill = 'white') +
+  ggplot2::coord_sf(xlim=c(280, 815), ylim=c(4050, 4485))
+
+lambda_Nplast = predict(
+  fit_gamma, sf::as_Spatial(pxl_all[,-c(4,5)]),
+  ~exp(year_gamma_Nplast +    
+         field_z2 + field_common1 +          
+         depth_gamma_Nplast +  
+         driver_gamma_Nplast +
+         dcoast_gamma_Nplast +
+         dharbour_gamma_Nplast +
+         slope_gamma_Nplast +
+         u_gamma_Nplast + 
+         v_gamma_Nplast +
+         logfe_gamma_Nplast + 
+         pop_radius_gamma_Nplast))
+
+
+#### Plot Predictions
+
+
+labels <- c("1"="2013", "2"= "2014", "3"="2015","4"="2016",
+            "5"="2017","6"="2018","7"="2019","8"="2020",
+            "9"="2021", "11"="2023", "12"="2024")
+
+p1_P <- ggplot2::ggplot() +
+  inlabru::gg(lambda_plast, ggplot2::aes(colour = median)) +
+  ggplot2::facet_wrap(.~ year, labeller=ggplot2::labeller(year = labels),ncol=4)   +
+  #ggplot2::coord_equal() +
+  scico::scale_fill_scico(palette = "bilbao",direction=1) + theme_map+
+  ggplot2::theme(panel.grid.major = ggplot2::element_blank(), panel.grid.minor =              
+                   ggplot2::element_blank(),legend.position = "bottom") +
+  ggplot2::geom_sf(data = italy_sf, alpha = 0.3, fill = 'white') +
+  #theme_map + 
+  ggplot2::coord_sf(xlim=c(280, 815), ylim=c(4050, 4485))+
+  ggplot2::ggtitle("Plastic")
+# 
+p1_NP <- ggplot2::ggplot() +
+  inlabru::gg(lambda_Nplast, ggplot2::aes(colour = median)) +
+  ggplot2::facet_wrap(.~ year, labeller=ggplot2::labeller(year = labels),ncol=4)   +
+  #ggplot2::coord_equal() +
+  scico::scale_fill_scico(palette = "bilbao",direction=1) + theme_map+
+  ggplot2::theme(panel.grid.major = ggplot2::element_blank(), panel.grid.minor =              
+                   ggplot2::element_blank(),legend.position = "bottom") +
+  ggplot2::geom_sf(data = italy_sf, alpha = 0.3, fill = 'white') +
+  #theme_map + 
+  ggplot2::coord_sf(xlim=c(280, 815), ylim=c(4050, 4485))+
+  ggplot2::ggtitle("Non--plastic")
+# 
+# 
+p1_P + plot_annotation(
+  title = 'Plastic - One common fiels model')
+# ggsave("pred_gamma_P.png", width = 30, height = 10, units = "cm")
+
+p1_NP + plot_annotation(
+  title = 'Plastic - One common fiels model')
+# ggsave("pred_gamma_NP.png", width = 30, height = 10, units = "cm")
+
+
+
+
+x_range<-range(pxl_coords[,1])
+y_range<-range(pxl_coords[,2])
+grid<-expand.grid(
+  x=seq(x_range[1],x_range[2],length.out=400),
+  y=seq(y_range[1],y_range[2],length.out=400))
+A_grid<-inla.spde.make.A(mesh=mesh,loc=as.matrix(grid))
+
+N <- nrow(mesh$loc)
+grid_sf<-data.frame(
+  x=grid$x,y=grid$y,
+  GF=as.vector(A_grid %*% fit_gamma$summary.random$field_z1$`0.5quant`[1:N]))
+
+intersected_sf<-sf::st_intersection(grid_sf,Prov23_shp)
+intersected_sf$x<-sf::st_coordinates(intersected_sf)[,1]
+intersected_sf$y<-sf::st_coordinates(intersected_sf)[,2]
+
+
+
+
+
+
+##' Model for presence  -------------------------------------------------------
+
+
+cmp_binomial <-  ~ 
+  -1+ year_bin_plast(year, model = "iid", 
+                     hyper=list(theta=list(prior="loggamma",fixed=T,  initial = log(0.001)))) +
+  year_bin_Nplast(year, model = "iid", 
+                  hyper=list(theta=list(prior="loggamma",fixed =   T,initial = log(0.001)))) +
+  # matern fields
+  field_z3(coordinates, model = spde_bin, replicate = year,nrep = 11) +
+  field_z4(coordinates, model = spde_bin, replicate = year,nrep = 11) +
+  field_common5(coordinates, copy="field_z3", fixed=F, replicate = year, 
+                hyper =  list(beta = list(prior = "gaussian", param = c(0,10)))) +
+  # linear covariates
+  depth_bin_plast(depth_SPDF_scaled, main_layer = "depth") +
+  driver_bin_plast(dist_river_SPDF_scaled, main_layer = "dist_river") +
+  dcoast_bin_plast(dist_coast_SPDF_scaled, main_layer = "dist_coast") +
+  dharbour_bin_plast(dist_harbour_SPDF_scaled,  main_layer = "dist_harbour") +
+  slope_bin_plast(slope_SPDF_scaled,  main_layer = "slope") +
+  depth_bin_Nplast(depth_SPDF_scaled, main_layer = "depth") +
+  driver_bin_Nplast(dist_river_SPDF_scaled, main_layer = "dist_river") +
+  dcoast_bin_Nplast(dist_coast_SPDF_scaled,  main_layer = "dist_coast") +
+  dharbour_bin_Nplast(dist_harbour_SPDF_scaled,  main_layer = "dist_harbour") +
+  slope_bin_Nplast(slope_SPDF_scaled, main_layer = "slope") +
+  u_bin_plast(u,main_layer = "u") +
+  v_bin_plast(v,main_layer = "v") + 
+  logfe_bin_plast(logfe,main_layer = "logfe")+
+  pop_radius_bin_plast(popRadius, main_layer = "popRadius") +
+  u_bin_Nplast(u,main_layer = "u") +
+  v_bin_Nplast(v,main_layer = "v") + 
+  logfe_bin_Nplast(logfe,main_layer = "logfe") +
+  pop_radius_bin_Nplast(popRadius, main_layer = "popRadius") 
+
+
+
+# formula for Plastic  
+formula_bin_plast = z_plast ~  year_bin_plast + field_z3 + 
+  depth_bin_plast + 
+  slope_bin_plast +
+  driver_bin_plast +  
+  u_bin_plast + v_bin_plast +
+  dcoast_bin_plast +
+  dharbour_bin_plast +
+  logfe_bin_plast + 
+  pop_radius_bin_plast + 
+  offset(ssa)
+
+# formula for NPlastic 
+formula_bin_Nplast  = z_Nplast ~ year_bin_Nplast + field_z4 + 
+  field_common5 +
+  depth_bin_Nplast +  
+  driver_bin_Nplast + 
+  dcoast_bin_Nplast +
+  dharbour_bin_Nplast +
+  u_bin_Nplast + 
+  slope_bin_Nplast + 
+  v_bin_Nplast + logfe_bin_Nplast + 
+  pop_radius_bin_Nplast +
+  offset(ssa)
+
+# define like objects
+
+lik_bin_plast <- bru_obs("binomial",
+                         formula = formula_bin_plast,
+                         samplers = border,
+                         domain = list(coordinates = mesh),
+                         data = df.sp)
+lik_bin_Nplast <- bru_obs("binomial",
+                          formula = formula_bin_Nplast,
+                          samplers = border,
+                          domain = list(coordinates = mesh),
+                          data = df.sp)
+# run the model
+
+
+
+fit_binomial <- bru(cmp_binomial, 
+                    lik_bin_plast,
+                    lik_bin_Nplast,
+                    options = list( # control.family = list(link = "log"),
+                      control.predictor=list(link = 1),
+                      control.compute = c.c,
+                      bru_max_iter=1, verbose = T, num.threads = 1 ))
+
+knitr::kable(fit_binomial$summary.fixed[,c(1,2,3,5)], digits = 3)
+
+
+#### Hyperparameters
+
+
+knitr::kable(fit_binomial$summary.hyperpar[,c(1,2,3,5)], digits = 3)
+##' Final model attempt: setup -------------------------------------------------
+
+
+mod.year <- list(theta=list(prior="loggamma",fixed = T, initial = log(0.001)))
+
+##' Joint component. Includes literally everything.
+
+cmp_joint <-    ~   -1 +
+  ##' year - specific intercepts
+  year_gamma_plast(year, model = "iid", hyper=mod.year) + 
+  year_gamma_Nplast(year, model = "iid", hyper=mod.year) +
+  year_bin_plast(year, model = "iid", hyper=mod.year) +
+  year_bin_Nplast(year, model = "iid", hyper = mod.year) +
+  ##' matern fields
+  field_z1(coordinates, model = spde_gamma, replicate = year, nrep = 11) + # yp
+  field_z2(coordinates, model = spde_gamma, replicate = year, nrep = 11) + # yo
+  field_z3(coordinates, model = spde_bin,   replicate = year, nrep = 11) + # zp
+  field_z4(coordinates, model = spde_bin,   replicate = year, nrep = 11) + # zo
+  field_common1(coordinates, copy="field_z1", fixed=F, replicate=year,
+                hyper = list(beta = list(prior = "gaussian", param = c(0,10)))) + # yp <> yo
+  field_common2(coordinates,  copy="field_z1", fixed=F, replicate = year, 
+                hyper = list(beta = list(prior = "gaussian", param = c(0,10)))) + # yp <> zp
+  field_common3(coordinates,  copy="field_z2", fixed=F, replicate = year, 
+                hyper = list(beta = list(prior = "gaussian", param = c(0,10)))) + # yo <> zp
+  field_common4(coordinates, copy="field_z1", fixed=F, replicate = year, 
+                hyper = list(beta = list(prior = "gaussian", param = c(0,10)))) + # yp <> zo
+  field_common5(coordinates, copy="field_z2", fixed=F, replicate = year, 
+                hyper = list(beta = list(prior = "gaussian", param = c(0,10)))) + # yo <> zo
+  field_common6(coordinates, copy="field_z3", fixed=F, replicate = year,
+                hyper = list(beta = list(prior = "gaussian", param = c(0,10)))) + # zp <> z0
+  ##' nonlinear covariates for density 
+  depth_gamma_plast(depth_SPDF,  model = "rw2", main_layer = "depth",
+                    values = values, scale.model = TRUE) +
+  depth_gamma_Nplast(depth_SPDF,  model = "rw2", main_layer = "depth",
+                     values = values, scale.model = TRUE) +
+  ##' linear covariates
+  u_gamma_plast(u,main_layer = "u") +
+  v_gamma_plast(v,main_layer = "v") +
+  logfe_gamma_plast(logfe,main_layer = "logfe") +
+  pop_radius_gamma_plast(popRadius, main_layer = "popRadius")+
+  u_gamma_Nplast(u,main_layer = "u") +
+  v_gamma_Nplast(v,main_layer = "v") +
+  logfe_gamma_Nplast(logfe,main_layer = "logfe")+
+  pop_radius_gamma_Nplast(popRadius, main_layer = "popRadius")+
+  driver_gamma_plast(dist_river_SPDF_scaled,main_layer =   "dist_river") +
+  dcoast_gamma_plast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
+  dharbour_gamma_plast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
+  slope_gamma_plast(slope_SPDF_scaled,main_layer = "slope") +
+  driver_gamma_Nplast(dist_river_SPDF_scaled,main_layer =   "dist_river") +
+  dcoast_gamma_Nplast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
+  dharbour_gamma_Nplast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
+  slope_gamma_Nplast(slope_SPDF_scaled,main_layer = "slope") +
+  depth_bin_plast(depth_SPDF_scaled, main_layer = "depth") +
+  driver_bin_plast(dist_river_SPDF_scaled, main_layer = "dist_river") +
+  dcoast_bin_plast(dist_coast_SPDF_scaled, main_layer = "dist_coast") +
+  dharbour_bin_plast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
+  slope_bin_plast(slope_SPDF_scaled,  main_layer = "slope") +
+  depth_bin_Nplast(depth_SPDF_scaled, main_layer = "depth") +
+  driver_bin_Nplast(dist_river_SPDF_scaled, main_layer = "dist_river") +
+  dcoast_bin_Nplast(dist_coast_SPDF_scaled,  main_layer = "dist_coast") +
+  dharbour_bin_Nplast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
+  slope_bin_Nplast(slope_SPDF_scaled, main_layer = "slope") +
+  u_bin_plast(u,main_layer = "u") +
+  v_bin_plast(v,main_layer = "v") + 
+  logfe_bin_plast(logfe,main_layer = "logfe")+
+  pop_radius_bin_plast(popRadius, main_layer = "popRadius")+
+  u_bin_Nplast(u,main_layer = "u") +
+  v_bin_Nplast(v,main_layer = "v") + 
+  logfe_bin_Nplast(logfe,main_layer = "logfe") +
+  pop_radius_bin_Nplast(popRadius, main_layer = "popRadius")
+
+
+
+##' Formulas - adapted from above sections
+
+formula_gamma_plast  <- y_plast ~    
+  year_gamma_plast + 
+  field_z1 +
+  depth_gamma_plast +
+  driver_gamma_plast +
+  dcoast_gamma_plast +
+  dharbour_gamma_plast +
+  slope_gamma_plast +
+  pop_radius_gamma_plast +
+  u_gamma_plast + v_gamma_plast + logfe_gamma_plast
+
+
+
+#formula for y_Nplastic - as above
+formula_gamma_Nplast  <- y_Nplast ~     
+  year_gamma_Nplast +
+  field_z2 +
+  field_common1 +
+  depth_gamma_Nplast +
+  driver_gamma_Nplast +
+  dcoast_gamma_Nplast +
+  dharbour_gamma_Nplast +
+  slope_gamma_Nplast +
+  pop_radius_gamma_Nplast +
+  u_gamma_Nplast +
+  v_gamma_Nplast + 
+  logfe_gamma_Nplast
+
+
+#formula for z ==> common fields with y here!!!
+formula_bin_plast <- z_plast ~ 
+  year_bin_plast + 
+  field_z3 + 
+  field_common2 +
+  field_common3 +
+  depth_bin_plast + 
+  slope_bin_plast +
+  driver_bin_plast + 
+  dcoast_bin_plast +  
+  dharbour_bin_plast +
+  u_bin_plast + 
+  v_bin_plast +
+  logfe_bin_plast +   
+  pop_radius_bin_plast +
+  offset(ssa)
+
+#' This is monstrous
+formula_bin_Nplast <- z_Nplast ~
+  year_bin_Nplast + 
+  field_z4 + 
+  field_common4 +
+  field_common5 +
+  field_common6 +
+  depth_bin_Nplast + 
+  slope_bin_Nplast +
+  driver_bin_Nplast +
+  u_bin_Nplast + 
+  v_bin_Nplast +
+  dcoast_bin_Nplast + 
+  dharbour_bin_Nplast +
+  logfe_bin_Nplast + 
+  pop_radius_bin_Nplast +
+  offset(ssa)
+
+
+
+##' Likelihoods. Likewise, defined as in previous parts
+
+lik_gamma_plast <- bru_obs("gamma",
+                           formula = formula_gamma_plast,
+                           samplers = border,
+                           domain = list(coordinates = mesh),
+                           data = df.sp)
+lik_gamma_Nplast <- bru_obs("gamma",
+                            formula = formula_gamma_Nplast,
+                            samplers = border,
+                            domain = list(coordinates = mesh),
+                            data = df.sp)
+lik_bin_plast <- bru_obs("binomial",
+                         formula = formula_bin_plast,
+                         samplers = border,
+                         domain = list(coordinates = mesh),
+                         data = df.sp)
+lik_bin_Nplast <- bru_obs("binomial",
+                          formula = formula_bin_Nplast,
+                          samplers = border,
+                          domain = list(coordinates = mesh),
+                          data = df.sp)
+
+
+##' NOW comes the final boss ---------------------------------------------------
+##' 
+
+
+
+fit_joint <- bru(
+  cmp_joint,  lik_gamma_plast, lik_gamma_Nplast, lik_bin_plast, lik_bin_Nplast,
+  options = list( # control.family = list(link = "log"),
+    control.predictor=list(link = 1),
+    control.compute = c.c,
+    #control.inla = list(h=1e-6),
+    bru_max_iter=1, verbose = T, num.threads = 1 ))
+
+

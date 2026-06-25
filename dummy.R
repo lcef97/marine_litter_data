@@ -350,7 +350,7 @@ lik_bin_Nplast <- bru_obs("binomial",
  
 
 
-fit_joint <- bru(
+fit_dummy <- bru(
   cmp_joint,  lik_gamma_plast, lik_gamma_Nplast, lik_bin_plast, lik_bin_Nplast,
   options = list( # control.family = list(link = "log"),
     control.predictor=list(link = 1),
@@ -359,3 +359,5 @@ fit_joint <- bru(
     bru_max_iter=1, verbose = T, num.threads = 1 ))
 
 
+
+save(fit_dummy, file = "Output/fit_dummy.RData")

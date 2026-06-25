@@ -9,7 +9,8 @@ if(!rlang::is_installed("INLA")){
 }
 
 CRAN.packages <- c("inlabru", "terra", "tidyverse", "lubridate", "sf", "raster", 
-                   "scico", "patchwork", "sp", "geodata", "spatstat.geom", "knitr")
+                   "scico", "patchwork", "sp", "geodata", "spatstat.geom",
+                   "rvest", "xml2", "knitr")
 
 for(p in CRAN.packages) if(!rlang::is_installed(p)) install.packages(p)
 
@@ -38,8 +39,20 @@ r0 <- raster(xmn= 450, ymn= 4000, xmx = 900,ymx = 4550, resolution = 1,
              crs = kmproj)
 
 ##' Load all needed data here 
-input.files <- list.files("Input", full.names=T)
-for (i in seq_along(input.files)) load(input.files[i])
+
+input.dir <- "https://github.com/lcef97/marine_litter_data/tree/main/Input"
+library(rvest)
+
+filenames <- xml2::read_html(input.dir) %>%
+  rvest::html_elements("a[title]") %>%
+  rvest::html_attr("title")
+
+filenames <- filenames[grepl("\\.RData$", filenames)]
+
+files <- paste0("https://raw.githubusercontent.com/lcef97/marine_litter_data/main/Input/", filenames)
+
+for(file in files) load(url(file))
+
 
 
 ##' customised theme for maps -------------------------------------------------#
@@ -149,102 +162,6 @@ ggplot2::ggplot() + inlabru::gg(mesh) +
 ##' save plot with custom size 8.00 x 6.00
 
 
-##' Null models ---------------------------------------------------------------
-
-##' GLM here ------------------------------------------------------------------#
-##' 
-##' Plastic density
-fit_gamma_glm_plast <-glm(
-  plast ~ 0 + factor(year) + u + v + popRadius + 
-    logfe + dist_river + dist_coast + dist_harbour + slope + depth + I(depth^2),
-  family = Gamma(link = "log"),
-  data = dplyr::filter(df, .data$plast>0) )
-summary(fit_gamma_glm_plast)
-##' non-plastic density
-fit_gamma_glm_Nplast <-glm(
-  Nplast ~ 0 + factor(year) + u + v + popRadius + 
-    logfe + dist_river + dist_coast + dist_harbour + slope + depth + I(depth^2),
-  family = Gamma(link = "log"),
-  data = dplyr::filter(df, .data$Nplast>0) )
-summary(fit_gamma_glm_Nplast)
-##' just depth and distance from rivers/harbours
-
-fit_binomial_glm_plast <-glm(
-  z_plast ~ 0 + factor(year) + u + v + popRadius + 
-    logfe + dist_river + dist_coast + dist_harbour + slope + depth + I(depth^2),
-  family = "binomial",
-  data = df )
-summary(fit_binomial_glm_plast)
-
-
-
-fit_binomial_glm_Nplast <-glm(
-  z_Nplast ~ 0 + factor(year) + u + v + popRadius + 
-    logfe + dist_river + dist_coast + dist_harbour + slope + depth + I(depth^2),
-  family = "binomial",
-  data = df )
-summary(fit_binomial_glm_Nplast)
-
-
-##' Add nonlinear terms - splines ---------------------------------------------#
-fit_gamma_gam_plast <- mgcv::gam(
-  plast ~ 0 +
-    s(logfe) +
-    factor(year) + u + v + popRadius + dist_river + dist_coast + dist_harbour + slope + s(depth),
-  family = Gamma(link = "log"),
-  data = dplyr::filter(df, .data$plast>0) )
-summary(fit_gamma_gam_plast)
-
-
-df.in <- st_drop_geometry(df) %>% dplyr::select(
-  .data$u, .data$v, .data$popRadius, .data$logfe, .data$dist_river, .data$dist_coast, 
-  .data$dist_harbour, .data$slope)
-n.row <- nrow(df)
-
-df.mvlist <- lapply(df.in, function(X){
-  matrix(c(X, rep(NA, 2*n.row), X), ncol=2,  nrow=2*n.row, byrow=F)
-})
-df.mvlist$Y <- matrix(
-  c(df$y_plast, rep(NA, 2*n.row), df$y_Nplast),
-  nrow=2*n.row, ncol = 2, byrow = FALSE)
-df.mvlist$Z <- matrix(
-  c(df$z_plast, rep(NA, 2*n.row), df$z_Nplast),
-  nrow=2*n.row, ncol = 2, byrow = FALSE)
-df.mvlist$year <-rep(df$year, 2)
-df.mvlist$depth <- rep(df$depth, 2)
-
-##' For later - maybe use `control.predictor = list(..., link = "log")`
-##' instead of link=1
-
-##' Nonspatial model - what happens here?
-fit_gamma_nosp <- inla(
-  Y ~ 0 + u + v + logfe + dist_river + dist_coast + dist_harbour + slope +  popRadius +
-    f(year, model = "iid",  hyper=list(theta=list(prior="loggamma",fixed = T, initial = log(0.001)))) +
-    f(depth,  model = "rw2",    scale.model = TRUE),
-  family = c("gamma", "gamma"), data = df.mvlist, control.compute = c.c,
-  verbose = T, num.threads = 1)
-
-ggplot2::ggplot(fit_gamma_nosp$summary.random$depth,  ggplot2::aes(x = ID, y = `0.5quant`)) +
-  ggplot2::geom_ribbon( ggplot2::aes(ymin = `0.025quant`,ymax = `0.975quant`),alpha = 0.3  ) +
-  ggplot2::geom_line(linewidth = 1) +
-  ggplot2::labs(x = "Depth",y = "Effect on plastic density"  ) +
-  ggplot2::theme_minimal()
-
-
-##' Nonspatial model - what happens here?
-fit_bin_nosp <- inla(
-  Z ~ 0 + u + v + logfe + dist_river + dist_coast +dist_harbour+ slope +  popRadius +
-    f(year, model = "iid",  hyper=list(theta=list(prior="loggamma",fixed = T, initial = log(0.001)))) +
-    f(depth,  model = "rw2",    scale.model = TRUE),
-  family = c("binomial", "binomial"), data = df.mvlist, control.compute = c.c,
-  verbose = T, num.threads = 1)
-
-ggplot2::ggplot(fit_bin_nosp$summary.random$depth,  ggplot2::aes(x = ID, y = `0.5quant`)) +
-  ggplot2::geom_ribbon( ggplot2::aes(ymin = `0.025quant`,ymax = `0.975quant`),alpha = 0.3  ) +
-  ggplot2::geom_line(linewidth = 1) +
-  ggplot2::labs(x = "Depth",y = "Effect on plastic density"  ) +
-  ggplot2::theme_minimal()
-# Ok we can use a linear effect then...
 
 ##' Model  for density ----------------------------------------------------
 ##' 

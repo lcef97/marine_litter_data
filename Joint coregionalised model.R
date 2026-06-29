@@ -1,8 +1,5 @@
 ##' Preliminary settings -------------------------------------------------------
-
-##' IMPORTANT - download INLA !! 
-
-if(!rlang::is_installed("INLA")){
+if(!"INLA" %in% installed.packages()){
   install.packages("INLA", 
                    repos=c(getOption("repos"), INLA="https://inla.r-inla-download.org/R/testing"),
                    dep=TRUE)
@@ -12,7 +9,7 @@ CRAN.packages <- c("inlabru", "terra", "tidyverse", "lubridate", "sf", "raster",
                    "scico", "patchwork", "sp", "geodata", "spatstat.geom",
                    "rvest", "xml2", "knitr")
 
-for(p in CRAN.packages) if(!rlang::is_installed(p)) install.packages(p)
+for(p in CRAN.packages) if(!p %in% installed.packages()) install.packages(p)
 
 
 library(INLA)
@@ -149,21 +146,24 @@ mesh <- fmesher::fm_mesh_2d_inla(
   offset = c(10, 40),
   crs = kmproj)
 
+plot.mesh <- FALSE
+if(plot.mesh){
+  ggplot2::ggplot() + inlabru::gg(mesh) +
+    ggplot2::geom_point(
+      data = data.frame(coord.df), 
+      ggplot2::aes(x,y ), col="red") +
+    ggplot2::geom_sf(data = italy_sf, alpha = 0.3, fill = "white") +
+    theme_map + 
+    ggplot2::coord_sf(xlim=c(400, 850), ylim=c(4015, 4520)) +
+    #ggplot2::theme_classic()+
+    ggplot2::ggtitle("Mesh and observation points")
+  ##' save plot with custom size 8.00 x 6.00
+}
 
-ggplot2::ggplot() + inlabru::gg(mesh) +
-  ggplot2::geom_point(
-    data = data.frame(coord.df), 
-    ggplot2::aes(x,y ), col="red") +
-  ggplot2::geom_sf(data = italy_sf, alpha = 0.3, fill = "white") +
-  theme_map + 
-  ggplot2::coord_sf(xlim=c(400, 850), ylim=c(4015, 4520)) +
-  #ggplot2::theme_classic()+
-  ggplot2::ggtitle("Mesh and observation points")
-##' save plot with custom size 8.00 x 6.00
 
 
 
-##' Model  for density ----------------------------------------------------
+##' Model  for density aND presence --------------------------------------------
 ##' 
 ##' 
 ##' define SPDE and PC priors
@@ -346,7 +346,7 @@ lik_bin_Nplast <- bru_obs("binomial",
                           data = df.sp)
 
 
-##' NOW comes the final boss ---------------------------------------------------
+##' Model run ---------------------------------------------------
 ##' 
 
 

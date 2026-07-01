@@ -1,0 +1,13 @@
+universe = vanilla
+getenv = True
+
+executable = run_conda_job.sh
+
+log = job.log
+output = job.out
+error = job.err
+
+request_cpus = 1
+request_memory = 64GB
+
+queue

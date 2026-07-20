@@ -1,0 +1,39 @@
+000 (1268602.000.000) 2026-07-07 13:35:50 Job submitted from host: <90.147.169.224:9618?addrs=90.147.169.224-9618+[2001-760-4227--1a4]-9618&alias=ettore.recas.ba.infn.it&noUDP&sock=schedd_873_6244>
+...
+001 (1268602.000.000) 2026-07-07 13:38:56 Job executing on host: <90.147.169.63:9618?addrs=90.147.169.63-9618+[2001-760-4227--192]-9618&alias=wn-4-3-5.recas.ba.infn.it&noUDP&sock=startd_6448_5ec2>
+        SlotName: slot1_32@wn-4-3-5.recas.ba.infn.it
+        CondorScratchDir = "/home/condor/dir_2111199"
+        Cpus = 1
+        Disk = 13183
+        GPUs = 0
+        Memory = 8192
+...
+006 (1268602.000.000) 2026-07-07 13:39:10 Image size of job updated: 45328
+        45  -  MemoryUsage of job (MB)
+        45328  -  ResidentSetSize of job (KB)
+...
+006 (1268602.000.000) 2026-07-07 13:40:02 Image size of job updated: 62244
+        61  -  MemoryUsage of job (MB)
+        62244  -  ResidentSetSize of job (KB)
+...
+005 (1268602.000.000) 2026-07-07 13:40:02 Job terminated.
+        (1) Normal termination (return value 0)
+                Usr 0 00:00:28, Sys 0 00:00:06  -  Run Remote Usage
+                Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+                Usr 0 00:00:28, Sys 0 00:00:06  -  Total Remote Usage
+                Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+        0  -  Run Bytes Sent By Job
+        0  -  Run Bytes Received By Job
+        0  -  Total Bytes Sent By Job
+        0  -  Total Bytes Received By Job
+        Partitionable Resources :    Usage  Request Allocated
+           Cpus                 :     0.88        1         1
+           Disk (KB)            :     1           1     13183
+           GPUs                 :                           0
+           Memory (MB)          :    61        8192      8192
+           TimeExecute (s)      :    66
+           TimeSlotBusy (s)     :    66
+
+        Job terminated of its own accord at 2026-07-07T11:40:02Z with exit-code 0.
+...
+

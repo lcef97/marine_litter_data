@@ -1,0 +1,633 @@
+=== ENVIRONMENT CHECK ===
+Working dir: /lustrehome/lcef97/projects/marine_litter
+PATH: /lustrehome/lcef97/miniconda3/envs/r_env/bin:/lustrehome/lcef97/miniconda3/condabin:/usr/local/bin:/usr/bin
+LD_LIBRARY_PATH:
+MALLOC_CONF:
+R_LIBS_USER: /lustrehome/lcef97/R/x86_64-conda-linux-gnu-library/4.5
+=========================
+
+=== FILESYSTEM DIAGNOSTIC ===
+WD: /lustrehome/lcef97/projects/marine_litter
+Input is dir: TRUE
+
+Listing Input BEFORE load:
+character(0)
+
+LOADING: /lustrehome/lcef97/projects/marine_litter/Input/covariates.RData
+OK: /lustrehome/lcef97/projects/marine_litter/Input/covariates.RData
+
+LOADING: /lustrehome/lcef97/projects/marine_litter/Input/depth_SPDF.RData
+OK: /lustrehome/lcef97/projects/marine_litter/Input/depth_SPDF.RData
+
+LOADING: /lustrehome/lcef97/projects/marine_litter/Input/df.RData
+OK: /lustrehome/lcef97/projects/marine_litter/Input/df.RData
+
+LOADING: /lustrehome/lcef97/projects/marine_litter/Input/dist_coast_SPDF.RData
+OK: /lustrehome/lcef97/projects/marine_litter/Input/dist_coast_SPDF.RData
+
+LOADING: /lustrehome/lcef97/projects/marine_litter/Input/dist_harbour_SPDF.RData
+OK: /lustrehome/lcef97/projects/marine_litter/Input/dist_harbour_SPDF.RData
+
+LOADING: /lustrehome/lcef97/projects/marine_litter/Input/dist_river_SPDF.RData
+OK: /lustrehome/lcef97/projects/marine_litter/Input/dist_river_SPDF.RData
+
+LOADING: /lustrehome/lcef97/projects/marine_litter/Input/italy_sf.RData
+OK: /lustrehome/lcef97/projects/marine_litter/Input/italy_sf.RData
+
+LOADING: /lustrehome/lcef97/projects/marine_litter/Input/poly3_nobati.RData
+OK: /lustrehome/lcef97/projects/marine_litter/Input/poly3_nobati.RData
+
+LOADING: /lustrehome/lcef97/projects/marine_litter/Input/popRadius2011_SPDF.RData
+OK: /lustrehome/lcef97/projects/marine_litter/Input/popRadius2011_SPDF.RData
+
+LOADING: /lustrehome/lcef97/projects/marine_litter/Input/popRadius2021_SPDF.RData
+OK: /lustrehome/lcef97/projects/marine_litter/Input/popRadius2021_SPDF.RData
+
+LOADING: /lustrehome/lcef97/projects/marine_litter/Input/pxl_all.RData
+OK: /lustrehome/lcef97/projects/marine_litter/Input/pxl_all.RData
+
+LOADING: /lustrehome/lcef97/projects/marine_litter/Input/slope_SPDF.RData
+OK: /lustrehome/lcef97/projects/marine_litter/Input/slope_SPDF.RData
+[1] "head(scale)"
+[1] 1 1 1 1 1 1
+[1] "head(weights)"
+[1] 1 1 1 1 1 1
+[1] "head(Ntrials)"
+[1] 1 1 1 1 1 1
+[1] "head(offset)"
+[1] 0 0 0 0 0 0
+[1] "head(E)"
+[1] 1 1 1 1 1 1
+[1] "head(strata)"
+NULL
+[1] "head(lp.scale)"
+NULL
+[1] "head(link.covariates)"
+NULL
+[1] "MPredictor 3080"
+[1] "NPredictor 112"
+[1] "NData 112"
+[1] "y...fake has length 3080"
+n.family 4
+ [1] "Entries with same length:" "year_gamma_plast"
+ [3] "depth_gamma_plast"         "u_gamma_plast"
+ [5] "v_gamma_plast"             "logfe_gamma_plast"
+ [7] "pop_radius_gamma_plast"    "driver_gamma_plast"
+ [9] "slope_gamma_plast"         "year_gamma_Nplast"
+[11] "depth_gamma_Nplast"        "u_gamma_Nplast"
+[13] "v_gamma_Nplast"            "logfe_gamma_Nplast"
+[15] "pop_radius_gamma_Nplast"   "driver_gamma_Nplast"
+[17] "slope_gamma_Nplast"        "year_bin_plast"
+[19] "depth_bin_plast"           "driver_bin_plast"
+[21] "slope_bin_plast"           "u_bin_plast"
+[23] "v_bin_plast"               "logfe_bin_plast"
+[25] "pop_radius_bin_plast"      "year_bin_Nplast"
+[27] "depth_bin_Nplast"          "driver_bin_Nplast"
+[29] "slope_bin_Nplast"          "u_bin_Nplast"
+[31] "v_bin_Nplast"              "logfe_bin_Nplast"
+[33] "pop_radius_bin_Nplast"     "y...fake"
+Model and results are stored in working directory [inla.model-21]
+[1] "prepare problem section"
+Prepare inla file.....inla.create.data.file: n.data =  3080
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad83eead847"
+[1]    0 2016  672    3    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad843abdcea"
+[1]    0 3080 3080    1    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad826e670c7"
+[1] 0 1 1 1 0 1 0 1
+[1] "prepare data section"
+inla.create.data.file: n.data =  3080
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad85e237aed"
+[1]    0 1338  446    3    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad85dab7012"
+[1]    0 3080 3080    1    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad85ddaa912"
+[1] 0 1 1 1 0 1 0 1
+[1] "prepare data section"
+inla.create.data.file: n.data =  3080
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad83018660c"
+[1]    0 2310  770    3    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad86335a478"
+[1]    0 3080 3080    1    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad845c4c62d"
+[1] 0 1 1 1 0 1 0 1
+[1] "prepare data section"
+inla.create.data.file: n.data =  3080
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad87d8ec3b6"
+[1]    0 2310  770    3    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad86d31de3f"
+[1]    0 3080 3080    1    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad85537b272"
+[1] 0 1 1 1 0 1 0 1
+[1] "prepare data section"
+[1] "prepare predictor section"
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad8991a436"
+[1]    0 6384 3192    2    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad84b9b8888"
+[1]    0 6384 3192    2    0    0    0    1
+1 iid
+2 rw2
+3 linear
+4 linear
+5 linear
+6 linear
+7 linear
+8 linear
+9 iid
+10 rw2
+11 linear
+12 linear
+13 linear
+14 linear
+15 linear
+16 linear
+17 iid
+18 linear
+19 linear
+20 linear
+21 linear
+22 linear
+23 linear
+24 linear
+25 iid
+26 linear
+27 linear
+28 linear
+29 linear
+30 linear
+31 linear
+32 linear
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad8614c1454"
+[1]  0 11 11  1  0  1  0  1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad81984e408"
+[1]   0 224 112   2   0   0   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad8406a059d"
+[1]   0 224 112   2   0   0   0   1
+[1] "n 11"
+[1] "nrep 1"
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad8dd22a7b"
+[1]  0 21 21  1  0  1  0  1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad81e753715"
+[1]   0 224 112   2   0   0   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad87e45710a"
+[1]   0 224 112   2   0   0   0   1
+[1] "n 21"
+[1] "nrep 1"
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad82ea9eb36"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad8607a1788"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad831e1951c"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad83ddc20b5"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad831a570e8"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad870cc6d63"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad8187fd9f"
+[1]  0 11 11  1  0  1  0  1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad82622d957"
+[1]   0 224 112   2   0   0   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad817b2de2b"
+[1]   0 224 112   2   0   0   0   1
+[1] "n 11"
+[1] "nrep 1"
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad85fab788c"
+[1]  0 21 21  1  0  1  0  1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad83ce4969"
+[1]   0 224 112   2   0   0   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad84d899066"
+[1]   0 224 112   2   0   0   0   1
+[1] "n 21"
+[1] "nrep 1"
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad83d86219e"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad833e6af75"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad830bf34de"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad860e7e5b0"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad879ab75a2"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad82e4df895"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad84e19c3ef"
+[1]  0 11 11  1  0  1  0  1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad847206fe5"
+[1]   0 224 112   2   0   0   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad8385ab07"
+[1]   0 224 112   2   0   0   0   1
+[1] "n 11"
+[1] "nrep 1"
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad857ab6826"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad812bbf86e"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad8252f6094"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad8d929ca1"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad874080cc2"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad83eb4449c"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad84dfca23e"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad81da373e"
+[1]  0 11 11  1  0  1  0  1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad85d297bb2"
+[1]   0 224 112   2   0   0   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad84c421348"
+[1]   0 224 112   2   0   0   0   1
+[1] "n 11"
+[1] "nrep 1"
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad830842274"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad83da3933a"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad87e23a864"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad86e604329"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad86f490422"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad86ef015c7"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-21/data.files/file205ad86fe840c8"
+[1]   0 224 112   2   0   1   0   1
+...done
+Run inla...[1] "all.args:   -s -v  -t1:1  -P compact"
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** INLA_DEBUG=1
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** INLA_MALLOC_LIB=mi
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** INLA_OS=linux
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** INLA_PATH=/lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** INLA_RHOME=/lustrehome/lcef97/miniconda3/envs/r_env/lib/R
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** INLA_RVERSION='R
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** version
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** 4.5.3
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** (2026-03-11)'
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** INLA_VERSION=25.10.19
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** MALLOC_CONF=abort_conf:true,metadata_thp:always,dirty_decay_ms:-1,percpu_arena:percpu
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** LD_PRELOAD=
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** LD_LIBRARY_PATH=/lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/first:/lustrehome/lcef97/miniconda3/envs/r_env/lib/R/lib:/lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit:/lib64:/usr/lib64:/lib:/usr/lib:
+        linux-vdso.so.1 (0x00007ffdba7e0000)
+        libRmath.so => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libRmath.so (0x0000146cffab7000)
+        libpardiso8.so => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/first/libpardiso8.so (0x0000146cff27d000)
+        libmetis.so => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libmetis.so (0x0000146cff012000)
+        libgsl.so.27 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libgsl.so.27 (0x0000146cfeb32000)
+        libRblas.so => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/first/libRblas.so (0x0000146cfeb00000)
+        libgslcblas.so.0 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libgslcblas.so.0 (0x0000146cfe8c1000)
+        libcrypto.so.10 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libcrypto.so.10 (0x0000146cfe45e000)
+        libltdl.so.7 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libltdl.so.7 (0x0000146cfe254000)
+        libz.so.1 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libz.so.1 (0x0000146cfe03e000)
+        libgfortran.so.5 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libgfortran.so.5 (0x0000146cfdbc4000)
+        libiomp5.so => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libiomp5.so (0x0000146cfd733000)
+        libgomp.so.1 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libgomp.so.1 (0x0000146cfd50d000)
+        libmuparser.so.2 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libmuparser.so.2 (0x0000146cfd2b2000)
+        libquadmath.so.0 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libquadmath.so.0 (0x0000146cfd076000)
+        libstdc++.so.6 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/first/libstdc++.so.6 (0x0000146cfcd6c000)
+        libdl.so.2 => /lib64/libdl.so.2 (0x0000146cfcd67000)
+        libm.so.6 => /lib64/libm.so.6 (0x0000146cfcc8c000)
+        libgcc_s.so.1 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/first/libgcc_s.so.1 (0x0000146cfca76000)
+        libpthread.so.0 => /lib64/libpthread.so.0 (0x0000146cfca71000)
+        libc.so.6 => /lib64/libc.so.6 (0x0000146cfc800000)
+        /lib64/ld-linux-x86-64.so.2 (0x0000146cffcf1000)
+        librt.so.1 => /lib64/librt.so.1 (0x0000146cfca6a000)
+
+*** FILE /lustrehome/lcef97/projects/marine_litter/inla.model-21/Model.ini:
+###  25.10.19
+###  Linux 5.14.0-570.42.2.el9_6.x86_64 #1 SMP PREEMPT_DYNAMIC Mon Sep 15 05:17:56 EDT 2025 wn-4-3-5.recas.ba.infn.it x86_64 unknown lcef97 lcef97
+###  linux-64bit Tue Jul  7 13:39:57 2026
+### [[[start of output from sessionInfo()]]]
+###    R version 4.5.3 (2026-03-11)
+###    Platform: x86_64-conda-linux-gnu
+###    Running under: AlmaLinux 9.6 (Sage Margay)
+###
+###    Matrix products: default
+###    BLAS/LAPACK: /lustrehome/lcef97/miniconda3/envs/r_env/lib/libopenblasp-r0.3.33.so;  LAPACK version 3.12.0
+###
+###    locale:
+###    [1] C
+###
+###    time zone: Europe/Rome
+###    tzcode source: system (glibc)
+###
+###    attached base packages:
+###    [1] stats     graphics  grDevices utils     datasets  methods   base
+###
+###    other attached packages:
+###     [1] spatstat.geom_3.8-1   spatstat.univar_3.2-0 spatstat.data_3.1-9
+###     [4] patchwork_1.3.2       scico_1.5.0           rlang_1.2.0
+###     [7] raster_3.6-32         sp_2.2-1              sf_1.1-0
+###    [10] magrittr_2.0.5        inlabru_2.14.1        INLA_25.10.19
+###    [13] Matrix_1.7-5
+###
+###    loaded via a namespace (and not attached):
+###     [1] generics_0.1.4       class_7.3-23         fmesher_0.8.0
+###     [4] KernSmooth_2.23-26   lattice_0.22-9       spatstat.utils_3.2-3
+###     [7] grid_4.5.3           RColorBrewer_1.1-3   plyr_1.8.9
+###    [10] e1071_1.7-17         DBI_1.3.0            scales_1.4.0
+###    [13] codetools_0.2-20     cli_3.6.6            units_1.0-1
+###    [16] polyclip_1.10-7      splines_4.5.3        withr_3.0.3
+###    [19] otel_0.2.0           parallel_4.5.3       tools_4.5.3
+###    [22] MatrixModels_0.5-4   deldir_2.0-4         dplyr_1.2.1
+###    [25] ggplot2_4.0.3        vctrs_0.7.3          R6_2.6.1
+###    [28] proxy_0.4-29         lifecycle_1.0.5      classInt_0.4-11
+###    [31] pkgconfig_2.0.3      terra_1.9-34         pillar_1.11.1
+###    [34] gtable_0.3.6         glue_1.8.1           Rcpp_1.1.1-1.1
+###    [37] tibble_3.3.1         tidyselect_1.2.1     farver_2.1.2
+###    [40] compiler_4.5.3       S7_0.2.2
+### [[[end of output from sessionInfo()]]]
+*** END OF FILE /lustrehome/lcef97/projects/marine_litter/inla.model-21/Model.ini:
+
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** OMP_DISPLAY_ENV=true
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** OMP_THREAD_LIMIT=1
+ *** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** exec /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl -s -v -t1:1 -P compact /lustrehome/lcef97/projects/marine_litter/inla.model-21/Model.ini
+..done
+
+ *** inla.core.safe:  The inla program failed, but will rerun in case better initial values may help. try=1/1
+[1] "MPredictor 3080"
+[1] "NPredictor 112"
+[1] "NData 112"
+[1] "y...fake has length 3080"
+n.family 4
+ [1] "Entries with same length:" "year_gamma_plast"
+ [3] "depth_gamma_plast"         "u_gamma_plast"
+ [5] "v_gamma_plast"             "logfe_gamma_plast"
+ [7] "pop_radius_gamma_plast"    "driver_gamma_plast"
+ [9] "slope_gamma_plast"         "year_gamma_Nplast"
+[11] "depth_gamma_Nplast"        "u_gamma_Nplast"
+[13] "v_gamma_Nplast"            "logfe_gamma_Nplast"
+[15] "pop_radius_gamma_Nplast"   "driver_gamma_Nplast"
+[17] "slope_gamma_Nplast"        "year_bin_plast"
+[19] "depth_bin_plast"           "driver_bin_plast"
+[21] "slope_bin_plast"           "u_bin_plast"
+[23] "v_bin_plast"               "logfe_bin_plast"
+[25] "pop_radius_bin_plast"      "year_bin_Nplast"
+[27] "depth_bin_Nplast"          "driver_bin_Nplast"
+[29] "slope_bin_Nplast"          "u_bin_Nplast"
+[31] "v_bin_Nplast"              "logfe_bin_Nplast"
+[33] "pop_radius_bin_Nplast"     "y...fake"
+Model and results are stored in working directory [inla.model-22]
+[1] "prepare problem section"
+Prepare inla file.....inla.create.data.file: n.data =  3080
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8156bdd79"
+[1]    0 2016  672    3    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad86a2f3f2"
+[1]    0 3080 3080    1    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8193a26e3"
+[1] 0 1 1 1 0 1 0 1
+[1] "prepare data section"
+inla.create.data.file: n.data =  3080
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8542c8458"
+[1]    0 1338  446    3    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8d19daf3"
+[1]    0 3080 3080    1    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad84ebb937"
+[1] 0 1 1 1 0 1 0 1
+[1] "prepare data section"
+inla.create.data.file: n.data =  3080
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad86e01c0a4"
+[1]    0 2310  770    3    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad846cc4bfb"
+[1]    0 3080 3080    1    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad83c1b8493"
+[1] 0 1 1 1 0 1 0 1
+[1] "prepare data section"
+inla.create.data.file: n.data =  3080
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8decbbe0"
+[1]    0 2310  770    3    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad836bf5cd3"
+[1]    0 3080 3080    1    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad820a8b44e"
+[1] 0 1 1 1 0 1 0 1
+[1] "prepare data section"
+[1] "prepare predictor section"
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad85beebd67"
+[1]    0 6384 3192    2    0    1    0    1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad82159895a"
+[1]    0 6384 3192    2    0    0    0    1
+1 iid
+2 rw2
+3 linear
+4 linear
+5 linear
+6 linear
+7 linear
+8 linear
+9 iid
+10 rw2
+11 linear
+12 linear
+13 linear
+14 linear
+15 linear
+16 linear
+17 iid
+18 linear
+19 linear
+20 linear
+21 linear
+22 linear
+23 linear
+24 linear
+25 iid
+26 linear
+27 linear
+28 linear
+29 linear
+30 linear
+31 linear
+32 linear
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad86f562b98"
+[1]  0 11 11  1  0  1  0  1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8168af84f"
+[1]   0 224 112   2   0   0   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad877cc7db6"
+[1]   0 224 112   2   0   0   0   1
+[1] "n 11"
+[1] "nrep 1"
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad83b983ee0"
+[1]  0 21 21  1  0  1  0  1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8470f1ac3"
+[1]   0 224 112   2   0   0   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8357010f0"
+[1]   0 224 112   2   0   0   0   1
+[1] "n 21"
+[1] "nrep 1"
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad839bbe744"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8356f5dec"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad824b91512"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad828abfd0c"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad825579eb4"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad83a24f28b"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad82f4ef0fe"
+[1]  0 11 11  1  0  1  0  1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad874eb5809"
+[1]   0 224 112   2   0   0   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8535f196e"
+[1]   0 224 112   2   0   0   0   1
+[1] "n 11"
+[1] "nrep 1"
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad837b7557"
+[1]  0 21 21  1  0  1  0  1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad820532fd"
+[1]   0 224 112   2   0   0   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8207fefc7"
+[1]   0 224 112   2   0   0   0   1
+[1] "n 21"
+[1] "nrep 1"
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad88672e8e"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad87006f3a1"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8674c3bc2"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad83ba0e05a"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad82c227834"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad87538f7a2"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad872603d2d"
+[1]  0 11 11  1  0  1  0  1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad83fe964ee"
+[1]   0 224 112   2   0   0   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad815e1abf1"
+[1]   0 224 112   2   0   0   0   1
+[1] "n 11"
+[1] "nrep 1"
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad84e4efa94"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad86142ee48"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad82a926d02"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad868f1fc98"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8509919e1"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8411d6551"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad860be7a4e"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8c3158c1"
+[1]  0 11 11  1  0  1  0  1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad882c8014"
+[1]   0 224 112   2   0   0   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8162e8b3e"
+[1]   0 224 112   2   0   0   0   1
+[1] "n 11"
+[1] "nrep 1"
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad845ed4006"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad83d9bde00"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad83ae7a050"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad86e993d12"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad862f37cb4"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad8750c92dc"
+[1]   0 224 112   2   0   1   0   1
+[1] "\nOpen file to write /lustrehome/lcef97/projects/marine_litter/inla.model-22/data.files/file205ad81de82e10"
+[1]   0 224 112   2   0   1   0   1
+...done
+Run inla...[1] "all.args:   -s -v  -t1:1  -P compact"
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** INLA_DEBUG=1
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** INLA_MALLOC_LIB=mi
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** INLA_OS=linux
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** INLA_PATH=/lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** INLA_RHOME=/lustrehome/lcef97/miniconda3/envs/r_env/lib/R
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** INLA_RVERSION='R
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** version
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** 4.5.3
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** (2026-03-11)'
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** INLA_VERSION=25.10.19
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** MALLOC_CONF=abort_conf:true,metadata_thp:always,dirty_decay_ms:-1,percpu_arena:percpu
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** LD_PRELOAD=
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** LD_LIBRARY_PATH=/lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/first:/lustrehome/lcef97/miniconda3/envs/r_env/lib/R/lib:/lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit:/lib64:/usr/lib64:/lib:/usr/lib:
+        linux-vdso.so.1 (0x00007fff75589000)
+        libRmath.so => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libRmath.so (0x0000148f851e7000)
+        libpardiso8.so => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/first/libpardiso8.so (0x0000148f849ad000)
+        libmetis.so => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libmetis.so (0x0000148f84742000)
+        libgsl.so.27 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libgsl.so.27 (0x0000148f84262000)
+        libRblas.so => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/first/libRblas.so (0x0000148f84230000)
+        libgslcblas.so.0 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libgslcblas.so.0 (0x0000148f83ff1000)
+        libcrypto.so.10 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libcrypto.so.10 (0x0000148f83b8e000)
+        libltdl.so.7 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libltdl.so.7 (0x0000148f83984000)
+        libz.so.1 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libz.so.1 (0x0000148f8376e000)
+        libgfortran.so.5 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libgfortran.so.5 (0x0000148f832f4000)
+        libiomp5.so => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libiomp5.so (0x0000148f82e63000)
+        libgomp.so.1 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libgomp.so.1 (0x0000148f82c3d000)
+        libmuparser.so.2 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libmuparser.so.2 (0x0000148f829e2000)
+        libquadmath.so.0 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/libquadmath.so.0 (0x0000148f827a6000)
+        libstdc++.so.6 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/first/libstdc++.so.6 (0x0000148f8249c000)
+        libdl.so.2 => /lib64/libdl.so.2 (0x0000148f82497000)
+        libm.so.6 => /lib64/libm.so.6 (0x0000148f823bc000)
+        libgcc_s.so.1 => /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/first/libgcc_s.so.1 (0x0000148f821a6000)
+        libpthread.so.0 => /lib64/libpthread.so.0 (0x0000148f821a1000)
+        libc.so.6 => /lib64/libc.so.6 (0x0000148f81e00000)
+        /lib64/ld-linux-x86-64.so.2 (0x0000148f85421000)
+        librt.so.1 => /lib64/librt.so.1 (0x0000148f8219a000)
+
+*** FILE /lustrehome/lcef97/projects/marine_litter/inla.model-22/Model.ini:
+###  25.10.19
+###  Linux 5.14.0-570.42.2.el9_6.x86_64 #1 SMP PREEMPT_DYNAMIC Mon Sep 15 05:17:56 EDT 2025 wn-4-3-5.recas.ba.infn.it x86_64 unknown lcef97 lcef97
+###  linux-64bit Tue Jul  7 13:40:00 2026
+### [[[start of output from sessionInfo()]]]
+###    R version 4.5.3 (2026-03-11)
+###    Platform: x86_64-conda-linux-gnu
+###    Running under: AlmaLinux 9.6 (Sage Margay)
+###
+###    Matrix products: default
+###    BLAS/LAPACK: /lustrehome/lcef97/miniconda3/envs/r_env/lib/libopenblasp-r0.3.33.so;  LAPACK version 3.12.0
+###
+###    locale:
+###    [1] C
+###
+###    time zone: Europe/Rome
+###    tzcode source: system (glibc)
+###
+###    attached base packages:
+###    [1] stats     graphics  grDevices utils     datasets  methods   base
+###
+###    other attached packages:
+###     [1] spatstat.geom_3.8-1   spatstat.univar_3.2-0 spatstat.data_3.1-9
+###     [4] patchwork_1.3.2       scico_1.5.0           rlang_1.2.0
+###     [7] raster_3.6-32         sp_2.2-1              sf_1.1-0
+###    [10] magrittr_2.0.5        inlabru_2.14.1        INLA_25.10.19
+###    [13] Matrix_1.7-5
+###
+###    loaded via a namespace (and not attached):
+###     [1] generics_0.1.4       class_7.3-23         fmesher_0.8.0
+###     [4] KernSmooth_2.23-26   lattice_0.22-9       spatstat.utils_3.2-3
+###     [7] grid_4.5.3           RColorBrewer_1.1-3   plyr_1.8.9
+###    [10] e1071_1.7-17         DBI_1.3.0            scales_1.4.0
+###    [13] codetools_0.2-20     cli_3.6.6            units_1.0-1
+###    [16] polyclip_1.10-7      splines_4.5.3        withr_3.0.3
+###    [19] otel_0.2.0           parallel_4.5.3       tools_4.5.3
+###    [22] MatrixModels_0.5-4   deldir_2.0-4         dplyr_1.2.1
+###    [25] ggplot2_4.0.3        vctrs_0.7.3          R6_2.6.1
+###    [28] proxy_0.4-29         lifecycle_1.0.5      classInt_0.4-11
+###    [31] pkgconfig_2.0.3      terra_1.9-34         pillar_1.11.1
+###    [34] gtable_0.3.6         glue_1.8.1           Rcpp_1.1.1-1.1
+###    [37] tibble_3.3.1         tidyselect_1.2.1     farver_2.1.2
+###    [40] compiler_4.5.3       S7_0.2.2
+### [[[end of output from sessionInfo()]]]
+*** END OF FILE /lustrehome/lcef97/projects/marine_litter/inla.model-22/Model.ini:
+
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** OMP_DISPLAY_ENV=true
+*** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** OMP_THREAD_LIMIT=1
+ *** /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl.run *** exec /lustrehome/lcef97/miniconda3/envs/r_env/lib/R/library/INLA/bin/linux/64bit/inla.mkl -s -v -t1:1 -P compact /lustrehome/lcef97/projects/marine_litter/inla.model-22/Model.ini
+..done
+[1] TRUE

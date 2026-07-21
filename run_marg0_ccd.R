@@ -24,6 +24,31 @@ kmproj <- CRS("+proj=utm +zone=33  +ellps=WGS84 +units=km +no_defs")
 r0 <- raster(xmn= 450, ymn= 4000, xmx = 900,ymx = 4550, resolution = 1,
              crs = kmproj)
 
+
+##' Data download - info ------------------------------------------------------#
+##' The HTC file gets data from the working directory.
+##' Here inputs are scraped from github only to make this script reproducible.
+##' Original R script (for HTC job submission) was:
+
+#--#  -------------------------------------------------------------------------#
+#--#  input.dir <- "/lustrehome/lcef97/projects/marine_litter/Input"           #
+#--#  files <- list.files(input.dir, full.names = TRUE)                        #
+#--#                                                                           #
+#--#                                                                           #
+#--#  for (f in files) {                                                       #
+#--#    cat("\nLOADING:", f, "\n")                                             # 
+#--#    tryCatch({                                                             #
+#--#      load(f)                                                              # 
+#--#      cat("OK:", f, "\n")                                                  #
+#--#    }, error = function(e) {                                               # 
+#--#      cat("FAILED:", f, "\n")                                              #   
+#--#      print(e)                                                             #
+#--#      stop(e)                                                              #
+#--#    })                                                                     #
+#--#  }                                                                        #
+#--#  -------------------------------------------------------------------------#
+
+
 ##' Load all needed data here
 input.dir <- "https://github.com/lcef97/marine_litter_data/tree/main/Input"
 library(rvest)

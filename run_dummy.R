@@ -240,23 +240,23 @@ cmp_joint <-    ~   -1 +
   logfe_gamma_Nplast(logfe,main_layer = "logfe")+
   pop_radius_gamma_Nplast(popRadius, main_layer = "popRadius")+
   driver_gamma_plast(dist_river_SPDF_scaled,main_layer =   "dist_river") +
-  #dcoast_gamma_plast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
-  #dharbour_gamma_plast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
-  slope_gamma_plast(slope_SPDF_scaled,main_layer = "slope") +
+  dcoast_gamma_plast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
+  dharbour_gamma_plast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
+  #slope_gamma_plast(slope_SPDF_scaled,main_layer = "slope") +
   driver_gamma_Nplast(dist_river_SPDF_scaled,main_layer =   "dist_river") +
-  #dcoast_gamma_Nplast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
-  #dharbour_gamma_Nplast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
-  slope_gamma_Nplast(slope_SPDF_scaled,main_layer = "slope") +
+  dcoast_gamma_Nplast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
+  dharbour_gamma_Nplast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
+  #slope_gamma_Nplast(slope_SPDF_scaled,main_layer = "slope") +
   depth_bin_plast(depth_SPDF_scaled, main_layer = "depth") +
   driver_bin_plast(dist_river_SPDF_scaled, main_layer = "dist_river") +
-  #dcoast_bin_plast(dist_coast_SPDF_scaled, main_layer = "dist_coast") +
-  #dharbour_bin_plast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
-  slope_bin_plast(slope_SPDF_scaled,  main_layer = "slope") +
+  dcoast_bin_plast(dist_coast_SPDF_scaled, main_layer = "dist_coast") +
+  dharbour_bin_plast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
+  #slope_bin_plast(slope_SPDF_scaled,  main_layer = "slope") +
   depth_bin_Nplast(depth_SPDF_scaled, main_layer = "depth") +
   driver_bin_Nplast(dist_river_SPDF_scaled, main_layer = "dist_river") +
-  #dcoast_bin_Nplast(dist_coast_SPDF_scaled,  main_layer = "dist_coast") +
-  #dharbour_bin_Nplast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
-  slope_bin_Nplast(slope_SPDF_scaled, main_layer = "slope") +
+  dcoast_bin_Nplast(dist_coast_SPDF_scaled,  main_layer = "dist_coast") +
+  dharbour_bin_Nplast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
+  #slope_bin_Nplast(slope_SPDF_scaled, main_layer = "slope") +
   u_bin_plast(u,main_layer = "u") +
   v_bin_plast(v,main_layer = "v") +
   logfe_bin_plast(logfe,main_layer = "logfe")+
@@ -275,9 +275,9 @@ formula_gamma_plast  <- y_plast ~
   #field_z1 +
   depth_gamma_plast +
   driver_gamma_plast +
-  #dcoast_gamma_plast +
-  #dharbour_gamma_plast +
-  slope_gamma_plast +
+  dcoast_gamma_plast +
+  dharbour_gamma_plast +
+  #slope_gamma_plast +
   pop_radius_gamma_plast +
   u_gamma_plast + v_gamma_plast + logfe_gamma_plast
 
@@ -290,9 +290,9 @@ formula_gamma_Nplast  <- y_Nplast ~
   #field_common1 +
   depth_gamma_Nplast +
   driver_gamma_Nplast +
-  #dcoast_gamma_Nplast +
-  #dharbour_gamma_Nplast +
-  slope_gamma_Nplast +
+  dcoast_gamma_Nplast +
+  dharbour_gamma_Nplast +
+  #slope_gamma_Nplast +
   pop_radius_gamma_Nplast +
   u_gamma_Nplast +
   v_gamma_Nplast +
@@ -306,10 +306,10 @@ formula_bin_plast <- z_plast ~
   #field_common2 +
   #field_common3 +
   depth_bin_plast +
-  slope_bin_plast +
+  #slope_bin_plast +
   driver_bin_plast +
-  #dcoast_bin_plast +
-  #dharbour_bin_plast +
+  dcoast_bin_plast +
+  dharbour_bin_plast +
   u_bin_plast +
   v_bin_plast +
   logfe_bin_plast +
@@ -324,12 +324,12 @@ formula_bin_Nplast <- z_Nplast ~
   #field_common5 +
   #field_common6 +
   depth_bin_Nplast +
-  slope_bin_Nplast +
+  #slope_bin_Nplast +
   driver_bin_Nplast +
   u_bin_Nplast +
   v_bin_Nplast +
-  #dcoast_bin_Nplast +
-  #dharbour_bin_Nplast +
+  dcoast_bin_Nplast +
+  dharbour_bin_Nplast +
   logfe_bin_Nplast +
   pop_radius_bin_Nplast +
   offset(ssa)

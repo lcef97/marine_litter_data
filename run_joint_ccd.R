@@ -6,6 +6,7 @@ library(inlabru)
 #library(tidyverse)
 #library(ggplot2)
 library(magrittr)
+library(excursions)
 #library(lubridate)
 library(sf)
 library(raster)
@@ -24,34 +25,37 @@ kmproj <- CRS("+proj=utm +zone=33  +ellps=WGS84 +units=km +no_defs")
 r0 <- raster(xmn= 450, ymn= 4000, xmx = 900,ymx = 4550, resolution = 1,
              crs = kmproj)
 
-##' Load all needed data here 
-
-input.dir <- "https://github.com/lcef97/marine_litter_data/tree/main/Input"
-library(rvest)
-
-filenames <- xml2::read_html(input.dir) %>%
-  rvest::html_elements("a[title]") %>%
-  rvest::html_attr("title")
-
-filenames <- filenames[grepl("\\.RData$", filenames)]
-
-files <- paste0("https://raw.githubusercontent.com/lcef97/marine_litter_data/main/Input/", filenames)
-
-for(file in files) load(url(file))
+ 
+##' Load all needed data here
+input.dir <- "Input"
+files <- list.files(input.dir, full.names = TRUE)
 
 
+cat("\n=== FILESYSTEM DIAGNOSTIC ===\n")
 
-##' customised theme for maps -------------------------------------------------#
-theme_map <-  ggplot2::theme_light() + 
-  ggplot2::theme(axis.ticks.x = ggplot2::element_blank(),
-                 axis.text.x = ggplot2::element_blank(),
-                 axis.ticks.y = ggplot2::element_blank(),
-                 axis.text.y = ggplot2::element_blank(),
-                 axis.title.x = ggplot2::element_blank(),
-                 axis.title.y = ggplot2::element_blank()) 
+cat("WD:", getwd(), "\n")
+
+cat("Input is dir:", dir.exists(input.dir), "\n")
+
+cat("\nListing Input BEFORE load:\n")
+print( files )
+
+
+
+for (f in files) {
+  cat("\nLOADING:", f, "\n")
+  tryCatch({
+    load(f)
+    cat("OK:", f, "\n")
+  }, error = function(e) {
+    cat("FAILED:", f, "\n")
+    print(e)
+    stop(e)
+  })
+}
+
 
 ##' Options for INLA and inlabru ----------------------------------------------#
-
 ##' First, run without internal.opt=FALSE. This will
 ##' impact on model replicability, but it's still a long way ahead
 ##' before results eligible to be published.
@@ -59,11 +63,10 @@ theme_map <-  ggplot2::theme_light() +
 options(INLA.expert = FALSE)
 bru_options_set(bru_verbose = 1, debug = TRUE)
 options(error = function(e) {
-  traceback(2)
-  quit(status=1)
+  traceback(4)
 })
-c.c <- list(dic=TRUE, waic=TRUE, config=TRUE, internal.opt = FALSE)
-
+c.c <- list(dic=TRUE, waic=TRUE, config=TRUE, cpo = TRUE, internal.opt = FALSE,
+            return.marginals.predictor = TRUE)
 
 ##' GUESS: this should be how `lonlatproj` was defined 
 ##' 
@@ -178,25 +181,25 @@ cmp_joint <-    ~   -1 +
   year_bin_plast(year, model = "iid", hyper=mod.year) +
   year_bin_Nplast(year, model = "iid", hyper = mod.year) +
   ##' matern fields
-  field_z1(get_xy(.data.), model = spde_gamma, group = year,
+  field_z1(geometry, model = spde_gamma, group = year,
            control.group = list(model = "iid")) + # yp
-  field_z2(get_xy(.data.), model = spde_gamma, group = year,
+  field_z2(geometry, model = spde_gamma, group = year,
            control.group = list(model = "iid")) + # yo
-  field_z3(get_xy(.data.), model = spde_gamma, group = year,
+  field_z3(geometry, model = spde_gamma, group = year,
            control.group = list(model = "iid")) + # zp
-  field_z4(get_xy(.data.), model = spde_gamma, group = year,
+  field_z4(geometry, model = spde_gamma, group = year,
            control.group = list(model = "iid")) + # zo
-  field_common1(get_xy(.data.), copy="field_z1", fixed=F, replicate=year,
+  field_common1(geometry, copy="field_z1", fixed=F, group=year,
                 hyper = list(beta = list(prior = "gaussian", param = c(0,10)))) + # yp <> yo
-  field_common2(get_xy(.data.),  copy="field_z1", fixed=F, replicate = year, 
+  field_common2(geometry,  copy="field_z1", fixed=F, group = year, 
                 hyper = list(beta = list(prior = "gaussian", param = c(0,10)))) + # yp <> zp
-  field_common3(get_xy(.data.),  copy="field_z2", fixed=F, replicate = year, 
+  field_common3(geometry,  copy="field_z2", fixed=F, group = year, 
                 hyper = list(beta = list(prior = "gaussian", param = c(0,10)))) + # yo <> zp
-  field_common4(get_xy(.data.), copy="field_z1", fixed=F, replicate = year, 
+  field_common4(geometry, copy="field_z1", fixed=F, group = year, 
                 hyper = list(beta = list(prior = "gaussian", param = c(0,10)))) + # yp <> zo
-  field_common5(get_xy(.data.), copy="field_z2", fixed=F, replicate = year, 
+  field_common5(geometry, copy="field_z2", fixed=F, group = year, 
                 hyper = list(beta = list(prior = "gaussian", param = c(0,10)))) + # yo <> zo
-  field_common6(get_xy(.data.), copy="field_z3", fixed=F, replicate = year,
+  field_common6(geometry, copy="field_z3", fixed=F, group = year,
                 hyper = list(beta = list(prior = "gaussian", param = c(0,10)))) + # zp <> z0
   ##' nonlinear covariates for density 
   depth_gamma_plast(depth_SPDF,  model = "rw2", main_layer = "depth",
@@ -204,40 +207,41 @@ cmp_joint <-    ~   -1 +
   depth_gamma_Nplast(depth_SPDF,  model = "rw2", main_layer = "depth",
                      values = values, scale.model = TRUE) +
   ##' linear covariates
+  driver_gamma_plast(dist_river_SPDF_scaled,main_layer =   "dist_river") +
+  dcoast_gamma_plast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
+  dharbour_gamma_plast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
+  #slope_gamma_plast(slope_SPDF_scaled,main_layer = "slope") +
   u_gamma_plast(u,main_layer = "u") +
   v_gamma_plast(v,main_layer = "v") +
   logfe_gamma_plast(logfe,main_layer = "logfe") +
   pop_radius_gamma_plast(popRadius, main_layer = "popRadius")+
+  driver_gamma_Nplast(dist_river_SPDF_scaled,main_layer =   "dist_river") +
+  dcoast_gamma_Nplast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
+  dharbour_gamma_Nplast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
+  #slope_gamma_Nplast(slope_SPDF_scaled,main_layer = "slope") +
   u_gamma_Nplast(u,main_layer = "u") +
   v_gamma_Nplast(v,main_layer = "v") +
   logfe_gamma_Nplast(logfe,main_layer = "logfe")+
   pop_radius_gamma_Nplast(popRadius, main_layer = "popRadius")+
-  driver_gamma_plast(dist_river_SPDF_scaled,main_layer =   "dist_river") +
-  dcoast_gamma_plast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
-  dharbour_gamma_plast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
-  slope_gamma_plast(slope_SPDF_scaled,main_layer = "slope") +
-  driver_gamma_Nplast(dist_river_SPDF_scaled,main_layer =   "dist_river") +
-  dcoast_gamma_Nplast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
-  dharbour_gamma_Nplast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
-  slope_gamma_Nplast(slope_SPDF_scaled,main_layer = "slope") +
+  #
   depth_bin_plast(depth_SPDF_scaled, main_layer = "depth") +
   driver_bin_plast(dist_river_SPDF_scaled, main_layer = "dist_river") +
   dcoast_bin_plast(dist_coast_SPDF_scaled, main_layer = "dist_coast") +
   dharbour_bin_plast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
-  slope_bin_plast(slope_SPDF_scaled,  main_layer = "slope") +
-  depth_bin_Nplast(depth_SPDF_scaled, main_layer = "depth") +
-  driver_bin_Nplast(dist_river_SPDF_scaled, main_layer = "dist_river") +
-  dcoast_bin_Nplast(dist_coast_SPDF_scaled,  main_layer = "dist_coast") +
-  dharbour_bin_Nplast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
-  slope_bin_Nplast(slope_SPDF_scaled, main_layer = "slope") +
+  #slope_bin_plast(slope_SPDF_scaled,  main_layer = "slope") +
   u_bin_plast(u,main_layer = "u") +
   v_bin_plast(v,main_layer = "v") + 
   logfe_bin_plast(logfe,main_layer = "logfe")+
   pop_radius_bin_plast(popRadius, main_layer = "popRadius")+
+  depth_bin_Nplast(depth_SPDF_scaled, main_layer = "depth") +
+  driver_bin_Nplast(dist_river_SPDF_scaled, main_layer = "dist_river") +
+  dcoast_bin_Nplast(dist_coast_SPDF_scaled,  main_layer = "dist_coast") +
+  dharbour_bin_Nplast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
+  #slope_bin_Nplast(slope_SPDF_scaled, main_layer = "slope") +
   u_bin_Nplast(u,main_layer = "u") +
   v_bin_Nplast(v,main_layer = "v") + 
   logfe_bin_Nplast(logfe,main_layer = "logfe") +
-  pop_radius_bin_Nplast(popRadius, main_layer = "popRadius")
+  pop_radius_bin_Nplast(popRadius, main_layer = "popRadius")   
 
 
 
@@ -250,7 +254,7 @@ formula_gamma_plast  <- y_plast ~
   driver_gamma_plast +
   dcoast_gamma_plast +
   dharbour_gamma_plast +
-  slope_gamma_plast +
+  #slope_gamma_plast +
   pop_radius_gamma_plast +
   u_gamma_plast + v_gamma_plast + logfe_gamma_plast
 
@@ -265,7 +269,7 @@ formula_gamma_Nplast  <- y_Nplast ~
   driver_gamma_Nplast +
   dcoast_gamma_Nplast +
   dharbour_gamma_Nplast +
-  slope_gamma_Nplast +
+  #slope_gamma_Nplast +
   pop_radius_gamma_Nplast +
   u_gamma_Nplast +
   v_gamma_Nplast + 
@@ -279,7 +283,7 @@ formula_bin_plast <- z_plast ~
   field_common2 +
   field_common3 +
   depth_bin_plast + 
-  slope_bin_plast +
+  #slope_bin_plast +
   driver_bin_plast + 
   dcoast_bin_plast +  
   dharbour_bin_plast +
@@ -297,7 +301,7 @@ formula_bin_Nplast <- z_Nplast ~
   field_common5 +
   field_common6 +
   depth_bin_Nplast + 
-  slope_bin_Nplast +
+  #slope_bin_Nplast +
   driver_bin_Nplast +
   u_bin_Nplast + 
   v_bin_Nplast +
@@ -314,22 +318,22 @@ formula_bin_Nplast <- z_Nplast ~
 lik_gamma_plast <- bru_obs("gamma",
                            formula = formula_gamma_plast,
                            samplers = border,
-                           domain = list(coordinates = mesh),
+                           domain = list(geometry = mesh),
                            data = df_scaled)
 lik_gamma_Nplast <- bru_obs("gamma",
                             formula = formula_gamma_Nplast,
                             samplers = border,
-                            domain = list(coordinates = mesh),
+                            domain = list(geometry = mesh),
                             data = df_scaled)
 lik_bin_plast <- bru_obs("binomial",
                          formula = formula_bin_plast,
                          samplers = border,
-                         domain = list(coordinates = mesh),
+                         domain = list(geometry = mesh),
                          data = df_scaled)
 lik_bin_Nplast <- bru_obs("binomial",
                           formula = formula_bin_Nplast,
                           samplers = border,
-                          domain = list(coordinates = mesh),
+                          domain = list(geometry = mesh),
                           data = df_scaled)
 
 
@@ -339,40 +343,126 @@ lik_bin_Nplast <- bru_obs("binomial",
 
 
 withCallingHandlers({
-  fit_joint_eb <-bru(
+  fit_joint_ccd <-bru(
     cmp_joint,  lik_gamma_plast, lik_gamma_Nplast,
     lik_bin_plast, lik_bin_Nplast,
     options = list(  
       control.predictor=list(link = 1),
       control.compute = c.c,
-      control.inla = list(int.strategy="eb"),
-      bru_max_iter=1, verbose = T, debug = T))
+      bru_max_iter=1, verbose = T, debug = T,
+      num.threads = 1))
 }, error = function(e) {
   message("!!!!!!!!!!!!!!! \n!!! WARNING !!! \n!!! Author-added message: either inla or inlabru literally failed, traceback follows")
-  if (file.exists("bru_crash_dump_joint_eb.rda")) {
-    message("removing extant crash_joint_eb")
-    file.remove("bru_crash_dump_joint_eb.rda")
+  if (file.exists("bru_crash_dump_joint_ccd.rda")) {
+    message("removing extant crash_joint_ccd")
+    file.remove("bru_crash_dump_joint_ccd.rda")
   }
-  dump.frames(dumpto = "bru_crash_dump_joint_eb", to.file = TRUE)
+  dump.frames(dumpto = "bru_crash_dump_joint_ccd", to.file = TRUE)
 })
 
+#' Be cautious here ==> rename according to covariates used
+filename.joint <- paste0("fit_joint_ccd_alldists", lubridate::today(), ".RData")
 
-filename.joint <- paste0("fit_joint", lubridate::today(), ".RData")
-
-filepath.rm <- file.path(getwd(), filename.dummy)
+filepath.rm <- file.path(getwd(), filename.joint)
 
 if (file.exists(filepath.rm)) {
   file.remove(filepath.rm)
 }
 
+lgocv_joint <- tryCatch({
+  list(lgocv_joint_g1 = inla.group.cv(fit_joint_ccd, num.level.sets=1),
+       lgocv_joint_g3 = inla.group.cv(fit_joint_ccd, num.level.sets=3),
+       lgocv_joint_g5 = inla.group.cv(fit_joint_ccd, num.level.sets=5))
+}, error = function(e) {
+  message("!!! ERROR !!! \n impossible to get lgocv !!!")
+  message(conditionMessage(e))
+  dump.frames(
+    to.file = TRUE,
+    dumpto = "groupcv_joint_dump"
+  )
+  traceback()
+  print(e)
+  return(NULL)
+})
 
-save(fit_joint, file = paste0("fit_joint", lubridate::today(), ".RData"))
+pred_joint <- NULL
+withCallingHandlers({
+  
+  lambda_plast  <- generate(
+    fit_joint_ccd, pxl_all_scaled,
+    ~ exp(year_gamma_plast + field_z1 +depth_gamma_plast +
+            driver_gamma_plast + dcoast_gamma_plast + dharbour_gamma_plast +
+            #slope_gamma_plast +
+            pop_radius_gamma_plast +u_gamma_plast + v_gamma_plast + logfe_gamma_plast),
+    verbose = T)
 
+  lambda_Nplast <- generate(
+    fit_joint_ccd, pxl_all_scaled,
+    ~ exp(year_gamma_Nplast + field_z2 + field_common1 + +depth_gamma_Nplast +
+            driver_gamma_Nplast + dcoast_gamma_Nplast + dharbour_gamma_Nplast +
+            #slope_gamma_Nplast +
+            pop_radius_gamma_Nplast +u_gamma_Nplast + v_gamma_Nplast + logfe_gamma_Nplast), 
+    verbose = T)
 
+  lambda_plast_pred  <- predict(
+    fit_joint_ccd, df_scaled,
+    ~ exp(year_gamma_plast + field_z1 +depth_gamma_plast +
+            driver_gamma_plast + dcoast_gamma_plast + dharbour_gamma_plast +
+            #slope_gamma_plast +
+            pop_radius_gamma_plast +u_gamma_plast + v_gamma_plast + logfe_gamma_plast),
+    verbose = T)
 
+  lambda_Nplast_pred <- predict(
+    fit_joint_ccd, df_scaled,
+    ~ exp(year_gamma_Nplast + field_z2 + field_common2 +depth_gamma_Nplast +
+            driver_gamma_Nplast + dcoast_gamma_Nplast + dharbour_gamma_Nplast +
+            #slope_gamma_Nplast +
+            pop_radius_gamma_Nplast +u_gamma_Nplast + v_gamma_Nplast + logfe_gamma_Nplast), 
+    verbose = T)
 
+  pred_joint <- list(lambda_plast = lambda_plast, lambda_Nplast = lambda_Nplast,
+               lambda_plast_pred = lambda_plast_pred, 
+               lambda_Nplast_pred = lambda_Nplast_pred)
+}, error = function(e) {
+  message("!!!!!!!!!!!!!!! \n!!! WARNING !!! \n!!! Author-added message: sampling literally failed, traceback follows")
+  if (file.exists("crash_samples_joint_ccd.rda")) {
+    message("removing extant crash_samples_joint_ccd")
+    file.remove("crash_samples_joint_ccd.rda")
+  }
+  dump.frames(dumpto = "crash_samples_joint_ccd", to.file = TRUE)
+})
 
+excp <- excNp <- list()
 
+if(!is.null(lambda_plast)){
+  aa <- data.frame(x = sf::st_coordinates(pxl_all)[,1],
+                   y = sf::st_coordinates(pxl_all)[,2],
+                   year = pxl_all$year,
+                   lambda_plast)
+  for (t in c(1:9, 11, 12)){
+    excp[[length(excp)+1]] <- excursions.mc(aa[aa$year==as.character(t), -c(1:3)],
+                                            alpha = 0.05, u = 30, type = ">", verbose=T)
+    names(excp)[length(excp)] <- as.character(t)
+  }
+}
 
+if(!is.null(lambda_Nplast)){
+  aa_Nplast <- data.frame(x = sf::st_coordinates(pxl_all)[,1],
+                          y = sf::st_coordinates(pxl_all)[,2],
+                          year = pxl_all$year,
+                          lambda_Nplast)
+  for (t in c(1:9, 11, 12)){
+    excNp[[length(excNp)+1]] <- excursions.mc(aa_Nplast[aa_Nplast$year==as.character(t), -c(1:3)],,
+                                              alpha = 0.05, u = 30, type = ">", verbose=T)
+    names(excNp)[length(excNp)] <- as.character(t)
+  }
+}
 
+exc_joint <- list(excp = excp, excNp = excNp)
 
+fit_joint_ccd$misc$configs$config <- NULL
+fit_joint_ccd$marginals.linear.predictor <-  NULL
+
+#' Be cautious here ==> rename according to covariates used
+fit_joint_ccd_alldists <- list(res=fit_joint_ccd, cv=lgocv_joint, exc=exc_joint)
+save(fit_joint_ccd_alldists, file = filename.joint)

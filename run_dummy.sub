@@ -1,9 +1,0 @@
-universe     = vanilla
-initialdir = /lustrehome/lcef97/projects/marine_litter
-executable   = /lustrehome/lcef97/projects/marine_litter/run_dummy.sh
-output       = /lustrehome/lcef97/projects/marine_litter/run_dummy.out
-error        = /lustrehome/lcef97/projects/marine_litter/run_dummy.err
-log          = /lustrehome/lcef97/projects/marine_litter/run_dummy.log
-request_cpus = 1
-request_memory = 32 GB
-queue

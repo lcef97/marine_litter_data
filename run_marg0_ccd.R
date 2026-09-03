@@ -24,47 +24,26 @@ kmproj <- CRS("+proj=utm +zone=33  +ellps=WGS84 +units=km +no_defs")
 r0 <- raster(xmn= 450, ymn= 4000, xmx = 900,ymx = 4550, resolution = 1,
              crs = kmproj)
 
-
-##' Data download - info ------------------------------------------------------#
-##' The HTC file gets data from the working directory.
-##' Here inputs are scraped from github only to make this script reproducible.
-##' Original R script (for HTC job submission) was:
-
-#--#  -------------------------------------------------------------------------#
-#--#  input.dir <- "/lustrehome/lcef97/projects/marine_litter/Input"           #
-#--#  files <- list.files(input.dir, full.names = TRUE)                        #
-#--#                                                                           #
-#--#                                                                           #
-#--#  for (f in files) {                                                       #
-#--#    cat("\nLOADING:", f, "\n")                                             # 
-#--#    tryCatch({                                                             #
-#--#      load(f)                                                              # 
-#--#      cat("OK:", f, "\n")                                                  #
-#--#    }, error = function(e) {                                               # 
-#--#      cat("FAILED:", f, "\n")                                              #   
-#--#      print(e)                                                             #
-#--#      stop(e)                                                              #
-#--#    })                                                                     #
-#--#  }                                                                        #
-#--#  -------------------------------------------------------------------------#
-
-
 ##' Load all needed data here
-input.dir <- "https://github.com/lcef97/marine_litter_data/tree/main/Input"
-library(rvest)
+input.dir <- "Input"
+files <- list.files(input.dir, full.names = TRUE)
 
-filenames <- xml2::read_html(input.dir) %>%
-  rvest::html_elements("a[title]") %>%
-  rvest::html_attr("title")
 
-filenames <- filenames[grepl("\\.RData$", filenames)]
+cat("\n=== FILESYSTEM DIAGNOSTIC ===\n")
 
-files <- paste0("https://raw.githubusercontent.com/lcef97/marine_litter_data/main/Input/", filenames)
+cat("WD:", getwd(), "\n")
+
+cat("Input is dir:", dir.exists(input.dir), "\n")
+
+cat("\nListing Input BEFORE load:\n")
+print( files )
+
+
 
 for (f in files) {
   cat("\nLOADING:", f, "\n")
   tryCatch({
-    load(url(f))
+    load(f)
     cat("OK:", f, "\n")
   }, error = function(e) {
     cat("FAILED:", f, "\n")
@@ -72,6 +51,8 @@ for (f in files) {
     stop(e)
   })
 }
+
+ 
 
 ##' Options for INLA and inlabru ----------------------------------------------#
 ##' First, run without internal.opt=FALSE. This will
@@ -84,7 +65,8 @@ options(error = function(e) {
   traceback(4)
   quit(status=1)
 })
-c.c <- list(dic=TRUE, waic=TRUE, config=TRUE, cpo = TRUE, internal.opt = FALSE)
+c.c <- list(dic=TRUE, waic=TRUE, config=TRUE, cpo = TRUE, internal.opt = FALSE,
+            return.marginals.predictor = TRUE)
 
 
 ##' GUESS: this should be how `lonlatproj` was defined
@@ -200,13 +182,13 @@ cmp_joint <-    ~   -1 +
   year_bin_plast(year, model = "iid", hyper=mod.year) +
   year_bin_Nplast(year, model = "iid", hyper = mod.year) +
   ##' matern fields
-  field_z1(cbind(df_scaled$x, df_scaled$y), model = spde_gamma, group = year,
+  field_z1(geometry, model = spde_gamma, group = year,
            control.group = list(model = "iid")) + # yp
-  field_z2(cbind(df_scaled$x, df_scaled$y), model = spde_gamma, group = year,
+  field_z2(geometry, model = spde_gamma, group = year,
            control.group = list(model = "iid")) + # yo
-  field_z3(cbind(df_scaled$x, df_scaled$y), model = spde_gamma, group = year,
+  field_z3(geometry, model = spde_gamma, group = year,
            control.group = list(model = "iid")) + # zp
-  field_z4(cbind(df_scaled$x, df_scaled$y), model = spde_gamma, group = year,
+  field_z4(geometry, model = spde_gamma, group = year,
            control.group = list(model = "iid")) + # zo
   #field_common1(cbind(df_scaled$x, df_scaled$y), copy="field_z1", fixed=F, group=year,
   #              hyper = list(beta = list(prior = "gaussian", param = c(0,10)))) + # yp <> yo
@@ -331,22 +313,22 @@ formula_bin_Nplast <- z_Nplast ~
 lik_gamma_plast <- bru_obs("gamma",
                            formula = formula_gamma_plast,
                            samplers = border,
-                           domain = list(coordinates = mesh),
+                           domain = list(geometry = mesh),
                            data = df_scaled)
 lik_gamma_Nplast <- bru_obs("gamma",
                             formula = formula_gamma_Nplast,
                             samplers = border,
-                            domain = list(coordinates = mesh),
+                            domain = list(geometry = mesh),
                             data = df_scaled)
 lik_bin_plast <- bru_obs("binomial",
                          formula = formula_bin_plast,
                          samplers = border,
-                         domain = list(coordinates = mesh),
+                         domain = list(geometry = mesh),
                          data = df_scaled)
 lik_bin_Nplast <- bru_obs("binomial",
                           formula = formula_bin_Nplast,
                           samplers = border,
-                          domain = list(coordinates = mesh),
+                          domain = list(geometry = mesh),
                           data = df_scaled)
 
 
@@ -404,5 +386,567 @@ lgocv_marg0 <- tryCatch({
 
 
 #' Be cautious here ==> rename according to covariates used
-fit_marg0_ccd_alldists <- list(fit_marg0_ccd, lgocv_marg0)
+fit_marg0_ccd_alldists <- list(res=fit_marg0_ccd, cv=lgocv_marg0)
 save(fit_marg0_ccd_alldists, file = filename.marg0)
+
+
+
+
+##' Further added things - not in HTC ------------------------------------------
+
+ 
+
+library(excursions)
+exc <- excursions.inla(
+  fit_marg0_ccd,
+  ind    = seq_len(1540),
+  u      = log(30),
+  type   = ">",
+  method = "NI", verbose = T)
+ 
+
+exc_joint <- excursions.inla(
+  fit_marg0_ccd,
+  ind    = seq_len(1540),
+  u      = log(30),
+  type   = ">",
+  method = "NI", verbose = T)
+
+#mesh.index <- inla.spde.make.index(name = "field", n.spde = spde_gamma$n.spde)
+#nxy <- c(100,100)
+#projgrid <- inla.mesh.projector(mesh, dims = nxy)
+
+#xy.in <- splancs::inout(projgrid$lattice$loc,poly=border), cbind(PRborder[, 1], PRborder[, 2]))
+#submesh = submesh.grid(matrix(xy.in, nxy[1], nxy[2]),
+#                       list(loc = projgrid$lattice$loc, dims = nxy))
+
+
+##' Excursion set - excruciating -----------------------------------------------
+library(excursions)
+library(lemon)
+library(gridExtra)
+
+#### Excursions set
+
+lambda_plast  <- generate(
+  fit_marg0_ccd, pxl_all_scaled,
+  ~ exp(year_gamma_plast + field_z1 +depth_gamma_plast +
+          driver_gamma_plast + dcoast_gamma_plast + dharbour_gamma_plast +
+          #slope_gamma_plast +
+          pop_radius_gamma_plast +u_gamma_plast + v_gamma_plast + logfe_gamma_plast),
+  verbose = T)
+
+lambda_Nplast <- generate(
+  fit_marg0_ccd, pxl_all_scaled,
+  ~ exp(year_gamma_Nplast + field_z2 + +depth_gamma_Nplast +
+          driver_gamma_Nplast + dcoast_gamma_Nplast + dharbour_gamma_Nplast +
+          #slope_gamma_Nplast +
+          pop_radius_gamma_Nplast +u_gamma_Nplast + v_gamma_Nplast + logfe_gamma_Nplast), 
+  verbose = T)
+
+lambda_plast_pred  <- predict(
+  fit_marg0_ccd, df_scaled,
+  ~ exp(year_gamma_plast + field_z1 +depth_gamma_plast +
+          driver_gamma_plast + dcoast_gamma_plast + dharbour_gamma_plast +
+          #slope_gamma_plast +
+          pop_radius_gamma_plast +u_gamma_plast + v_gamma_plast + logfe_gamma_plast),
+  verbose = T)
+
+lambda_Nplast_pred <- generate(
+  fit_marg0_ccd, df_scaled,
+  ~ exp(year_gamma_Nplast + field_z2 + +depth_gamma_Nplast +
+          driver_gamma_Nplast + dcoast_gamma_Nplast + dharbour_gamma_Nplast +
+          #slope_gamma_Nplast +
+          pop_radius_gamma_Nplast +u_gamma_Nplast + v_gamma_Nplast + logfe_gamma_Nplast), 
+  verbose = T)
+
+
+
+
+prob_plast <- generate(fit_marg0_ccd, pxl_all_scaled, ~ 
+                         probs( year_bin_plast + field_z3 +
+                                  depth_bin_plast + driver_bin_plast + 
+                                  dcoast_bin_plast + dharbour_bin_plast + u_bin_plast + v_bin_plast + 
+                                  logfe_bin_plast + pop_radius_bin_plast  ))
+
+
+pred <- list(lambda_plast, lambda_Nplast, lambda_plast_pred, lambda_Nplast_pred)
+
+
+
+
+probs <- function(x) exp(x)/(1+exp(x))
+
+
+p1 = data.frame(x = sf::st_coordinates(pxl_all)[,1],
+                y = sf::st_coordinates(pxl_all)[,2],
+                year = pxl_all$year,
+                lambda_plast * prob_plast,
+                z = apply(lambda_plast * prob_plast,1,mean))
+
+
+
+
+
+
+
+
+aa <- data.frame(x = sf::st_coordinates(pxl_all)[,1],
+                y = sf::st_coordinates(pxl_all)[,2],
+                year = pxl_all$year,
+                lambda_plast)
+
+aa_Nplast <- data.frame(x = sf::st_coordinates(pxl_all)[,1],
+                       y = sf::st_coordinates(pxl_all)[,2],
+                       year = pxl_all$year,
+                       lambda_Nplast)
+
+# aa %>% dplyr::filter(year == 1) %>% ggplot() +  geom_tile(aes(x,y,fill = X1)) 
+
+exc1 <- excursions.mc(aa[aa$year=="1", -c(1:3)],
+                     alpha = 0.05,
+                     u = 30, # (in our case it's natural scale)                     in log scale!!!
+                     type = ">")  
+
+exc1_Np <- excursions.mc(aa_Nplast[aa_Nplast$year=="1", - c(1:3)],
+                        alpha = 0.05,
+                        u = 30, # (in our case it's natural scale)                     in log scale!!!
+                        type = ">")  
+
+exc1P_joint = excursions.mc(p1[p1$year=="1",-c(1:3)],
+                            alpha = 0.05,
+                            u = 30, # (in our case it's natural scale)                     in log scale!!!
+                            type = ">")  
+
+exc1O_joint = excursions.mc(p2[p2$year=="1",-c(1:3)],
+                            alpha = 0.05,
+                            u = 10, # (in our case it's natural scale)                     in log scale!!!
+                            type = ">")                    
+
+
+exc2 = excursions.mc(aa[aa$year=="2",-c(1:3)], 
+                     alpha = 0.05, 
+                     u = 30, # in log scale!!! 
+                     type = ">") 
+
+exc2_Np = excursions.mc(aa_Nplast[aa_Nplast$year=="2",-c(1:3)],
+                        alpha = 0.05,
+                        u = 30, # (in our case it's natural scale)                     in log scale!!!
+                        type = ">")  
+
+
+exc2P_joint = excursions.mc(p1[p1$year=="2",-c(1:3)],
+                            alpha = 0.05,
+                            u = 30, # in log scale!!!
+                            type = ">") 
+exc2O_joint = excursions.mc(p2[p2$year=="2",-c(1:3)],
+                            alpha = 0.05,
+                            u = 10, # (in our case it's natural scale)                     in log scale!!!
+                            type = ">")
+exc3 =excursions.mc(aa[aa$year=="3",-c(1:3)], 
+                    alpha = 0.05, 
+                    u = 30, # in log scale!!! 
+                    type = ">") 
+
+exc3_Np = excursions.mc(aa_Nplast[aa_Nplast$year=="3",-c(1:3)],
+                        alpha = 0.05,
+                        u = 30, # (in our case it's natural scale)                     in log scale!!!
+                        type = ">")  
+
+exc3P_joint =excursions.mc(p1[p1$year=="3",-c(1:3)],
+                           alpha = 0.05,
+                           u = 30, # in log scale!!!
+                           type = ">") 
+
+
+exc3O_joint =excursions.mc(p2[p2$year=="3",-c(1:3)],
+                           alpha = 0.05,
+                           u = 10, # in log scale!!!
+                           type = ">")                  
+
+exc4 = excursions.mc(aa[aa$year=="4",-c(1:3)], 
+                     alpha = 0.05, 
+                     u = 30, # in log scale!!!
+                     type = ">")  
+
+exc4_Np = excursions.mc(aa_Nplast[aa_Nplast$year=="4",-c(1:3)],
+                        alpha = 0.05,
+                        u = 30, # (in our case it's natural scale)                     in log scale!!!
+                        type = ">")  
+
+
+
+exc4P_joint =excursions.mc(p1[p1$year=="4",-c(1:3)],
+                           alpha = 0.05,
+                           u = 30, # in log scale!!!
+                           type = ">") 
+
+exc4O_joint =excursions.mc(p2[p2$year=="4",-c(1:3)],
+                           alpha = 0.05,
+                           u = 10, # in log scale!!!
+                           type = ">")  
+
+
+exc5 = excursions.mc(aa[aa$year=="5",-c(1:3)], 
+                     alpha = 0.05, 
+                     u = 30, # in log scale!!! 
+                     type = ">")  
+
+exc5_Np = excursions.mc(aa_Nplast[aa_Nplast$year=="5",-c(1:3)],
+                        alpha = 0.05,
+                        u = 30, # (in our case it's natural scale)                     in log scale!!!
+                        type = ">")  
+
+exc5P_joint =excursions.mc(p1[p1$year=="5",-c(1:3)],
+                           alpha = 0.05,
+                           u = 30, # in log scale!!!
+                           type = ">") 
+
+exc5O_joint =excursions.mc(p2[p2$year=="5",-c(1:3)],
+                           alpha = 0.05,
+                           u = 10, # in log scale!!!
+                           type = ">") 
+
+exc6 = excursions.mc(aa[aa$year=="6",-c(1:3)], 
+                     alpha = 0.05, 
+                     u = 30, # in log scale!!! 
+                     type = ">")  
+
+exc6_Np = excursions.mc(aa_Nplast[aa_Nplast$year=="6",-c(1:3)],
+                        alpha = 0.05,
+                        u = 30, # (in our case it's natural scale)                     in log scale!!!
+                        type = ">")  
+
+exc6P_joint =excursions.mc(p1[p1$year=="6",-c(1:3)],
+                           alpha = 0.05,
+                           u = 30, # in log scale!!!
+                           type = ">")
+
+exc6O_joint =excursions.mc(p2[p2$year=="6",-c(1:3)],
+                           alpha = 0.05,
+                           u = 10, # in log scale!!!
+                           type = ">")                  
+
+exc7 = excursions.mc(aa[aa$year=="7",-c(1:3)], 
+                     alpha = 0.05, 
+                     u = 30, # in log scale!!! 
+                     type = ">") 
+
+exc7_Np = excursions.mc(aa_Nplast[aa_Nplast$year=="7",-c(1:3)],
+                        alpha = 0.05,
+                        u = 30, # (in our case it's natural scale)                     in log scale!!!
+                        type = ">")  
+
+exc7P_joint =excursions.mc(p1[p1$year=="7",-c(1:3)],
+                           alpha = 0.05,
+                           u = 30, # in log scale!!!
+                           type = ">") 
+exc7O_joint =excursions.mc(p2[p2$year=="7",-c(1:3)],
+                           alpha = 0.05,
+                           u = 10, # in log scale!!!
+                           type = ">")                     
+
+exc8 = excursions.mc(aa[aa$year=="8",-c(1:3)], 
+                     alpha = 0.05, 
+                     u = 30, # in log scale!!! 
+                     type = ">") 
+
+exc8_Np = excursions.mc(aa_Nplast[aa_Nplast$year=="8",-c(1:3)],
+                        alpha = 0.05,
+                        u = 30, # (in our case it's natural scale)                     in log scale!!!
+                        type = ">")  
+
+exc8P_joint =excursions.mc(p1[p1$year=="8",-c(1:3)],
+                           alpha = 0.05,
+                           u = 30, # in log scale!!!
+                           type = ">")  
+exc8O_joint =excursions.mc(p2[p2$year=="8",-c(1:3)],
+                           alpha = 0.05,
+                           u = 10, # in log scale!!!
+                           type = ">")                   
+
+myplot1PD <- data.frame(
+  sf::st_coordinates(pxl_all[pxl_all$year=="1",]),z = exc1$F) %>% 
+  ggplot2::ggplot() + ggplot2::geom_tile(ggplot2::aes(X, Y, fill = z))
+
+myplot1OD <- data.frame(
+  sf::st_coordinates(pxl_all[pxl_all$year=="1",]),z = exc1_Np$F) %>%
+  ggplot2::ggplot() + ggplot2::geom_tile(aes(X, Y,fill = z))
+
+ 
+myplot2PD=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="2",]),z = exc2$F) %>%  ggplot2::ggplot() + geom_tile(aes(X,Y,fill = z))
+myplot2OD=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="2",]),z = exc2_Np$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+
+myplot2O=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="2",]),z = exc2O_joint$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+
+myplot3PD=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="3",]),z = exc3$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+myplot3OD=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="3",]),z = exc3_Np$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+
+
+myplot3O=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="3",]),z = exc3O_joint$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+
+
+myplot4PD=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="4",]),z = exc4$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+myplot4OD=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="4",]),z = exc4_Np$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+
+myplot4O=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="4",]),z = exc4O_joint$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+
+myplot5PD=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="5",]),z = exc5$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+myplot5OD=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="5",]),z = exc5_Np$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+
+myplot5O=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="5",]),z = exc5O_joint $F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+
+myplot6PD=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="6",]),z = exc6$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+myplot6OD=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="6",]),z = exc6_Np$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+
+
+myplot6O=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="6",]),z = exc6O_joint$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+
+myplot7PD=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="7",]),z = exc7$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+myplot7OD=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="7",]),z = exc7_Np$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+
+
+myplot7O=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="7",]),z = exc7O_joint$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+
+myplot8PD=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="8",]),z = exc8$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+myplot8OD=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="8",]),z = exc8_Np$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+
+myplot8O=data.frame(sf::st_coordinates(pxl_all[pxl_all$year=="8",]),z = exc8O_joint$F) %>%  ggplot2::ggplot() + ggplot2::geom_tile(aes(X,Y,fill = z))
+
+
+
+year_plast1=myplot1PD + ggplot2::coord_equal() + 
+  scico::scale_fill_scico(palette = "lajolla",direction=1)+   #theme_map+
+  ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor =
+          ggplot2::element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = ggplot2::element_text(size = 15, face = "bold"))+ 
+  ggplot2::geom_sf(data = italy_sf, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggplot2::ggtitle("2013") 
+#ggsave("exc2013.png", width = 13, height = 11, units = "cm")  
+#year_other1=myplot1O + coord_equal() + 
+#scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+#theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+#plot.title = element_text(size = 15, face = "bold"))+ 
+#geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+#coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+#ggtitle("2013") 
+
+year_Nplast1=myplot1OD + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2013") 
+#ggsave("exc2013.png", width = 13, height = 11, units = "cm")  
+year_other1=myplot1O + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2013") 
+
+year_plast2=myplot2PD + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2014") 
+# ggsave("exc2014.png", width = 13, height = 11, units = "cm") 
+
+year_other2=myplot2O + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2014") 
+
+year_plast2=myplot2PD + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2014") 
+# ggsave("exc2014.png", width = 13, height = 11, units = "cm") 
+
+year_other2=myplot2OD + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2014") 
+
+
+
+year_plast3=myplot3P + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2015") 
+# ggsave("exc2015.png", width = 13, height = 11, units = "cm") 
+
+year_other3=myplot3O + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2015")
+
+
+year_plast4=myplot4P + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2016") 
+# ggsave("exc2016.png", width = 13, height = 11, units = "cm") 
+
+year_other4=myplot4O + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2016") 
+
+year_plast5=myplot5P + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2017") 
+#ggsave("exc2017.png", width = 13, height = 11, units = "cm")
+
+year_other5=myplot5O + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2017") 
+
+year_plast6=myplot6P + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2018") 
+# ggsave("exc2018.png", width = 13, height = 11, units = "cm") 
+
+year_other6=myplot6O + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2018") 
+
+year_plast7=myplot7P + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2019") 
+# ggsave("exc2019.png", width = 13, height = 11, units = "cm") 
+
+year_other7=myplot7O + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2019") 
+
+year_plast8=myplot8P + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1)+   theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2020") 
+# ggsave("exc2020.png", width = 13, height = 11, units = "cm") 
+
+theme_map2 =  theme_light() + 
+  theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank()) 
+
+year_other8=myplot8O + coord_equal() + 
+  scale_fill_scico(palette = "lajolla",direction=1) +theme_map+
+  theme(panel.grid.major = element_blank(), panel.grid.minor =                 element_blank(),legend.position = c(0.91, 0.24),
+        plot.title = element_text(size = 15, face = "bold"))+ 
+  geom_sf(data = italy, alpha = 0.3, fill = 'white')+ 
+  coord_sf(xlim=c(280, 815), ylim=c(4050, 4480))+
+  ggtitle("2020")
+
+
+nt <- theme(legend.position='none')
+exc_plast=grid_arrange_shared_legend(year_plast1+nt,year_plast2+nt,year_plast3+nt,year_plast4+nt, year_plast5+nt,year_plast6+nt,year_plast7+nt,
+                                     year_plast8+nt, ncol = 4, nrow = 2, position='bottom')
+ggsave("exc_plast.png", exc_plast, width = 1280/72, height = 800/72, dpi = 72)
+
+ggsave("exc_plast2.png", exc_plast, width = 9, height = 5, dpi=300)
+
+
+exc_other=grid_arrange_shared_legend(year_other1+nt,year_other2+nt,year_other3+nt,year_other4+nt, year_other5+nt,year_other6+nt,year_other7+nt,
+                                     year_other8+nt, ncol = 4, nrow = 2, position='bottom')
+ggsave("exc_other.png", exc_other, width = 1280/72, height = 800/72, dpi = 72)
+
+
+
+
+
+
+
+##' Other - to be relocated  ---------------------------------------------------
+ 
+
+fit_marg0_ccd$summary.random$year_gamma_plast %>%
+  dplyr::mutate(ID = as.character(c(2013:2021, 2023, 2024))) %>%
+  ggplot2::ggplot() + 
+  ggplot2::geom_errorbar(ggplot2::aes(ID, ymin = `0.025quant`, ymax = `0.975quant`),
+                         alpha = 0.8, col="black",size=0.6) +
+  ggplot2::theme_bw()+
+  ggplot2::labs(y= "mean", x = "year") +
+  ggplot2::geom_point(aes(ID,mean), col="red", size=2.2)+
+  ggplot2::ylim(2.5,5.5)+
+  ggplot2::ggtitle("Plastic") +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+fit_marg0_ccd$summary.random$year_gamma_Nplast %>%
+  dplyr::mutate(ID = as.character(c(2013:2021, 2023, 2024))) %>%
+  ggplot2::ggplot() + 
+  ggplot2::geom_errorbar(ggplot2::aes(ID, ymin = `0.025quant`, ymax = `0.975quant`),
+                         alpha = 0.8, col="black",size=0.6) +
+  ggplot2::theme_bw()+
+  ggplot2::labs(y= "mean", x = "year") +
+  ggplot2::geom_point(aes(ID,mean), col="red", size=2.2)+
+  ggplot2::ylim(2.5,5)+
+  ggplot2::ggtitle("Other") +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+
+
+
+
+
+
+
+
+

@@ -77,6 +77,14 @@ border.ll <- SpatialPolygons(list(Polygons(list(Polygon(poly3)),"0")),proj4strin
 border <- spTransform(border.ll, kmproj)
 ##' extent - useful for plots
 r0.ext <- raster::extent(r0)
+
+
+df <- df |> 
+  dplyr::filter(.data$year==12)
+
+pxl_all <- pxl_all |> 
+  dplyr::filter(.data$year==12)
+
 ##' Standardise covariates -----------------------------------------------------
 
 sd.u <- sd(df$u)
@@ -206,6 +214,10 @@ cmp_joint <-    ~   -1 +
                     values = values, scale.model = TRUE) +
   depth_gamma_Nplast(depth_SPDF,  model = "rw2", main_layer = "depth",
                      values = values, scale.model = TRUE) +
+  depth_bin_plast(depth_SPDF,  model = "rw2", main_layer = "depth",
+                    values = values, scale.model = TRUE) +
+  depth_bin_Nplast(depth_SPDF,  model = "rw2", main_layer = "depth",
+                     values = values, scale.model = TRUE) +
   ##' linear covariates
   driver_gamma_plast(dist_river_SPDF_scaled,main_layer =   "dist_river") +
   dcoast_gamma_plast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
@@ -224,7 +236,7 @@ cmp_joint <-    ~   -1 +
   logfe_gamma_Nplast(logfe,main_layer = "logfe")+
   pop_radius_gamma_Nplast(popRadius, main_layer = "popRadius")+
   #
-  depth_bin_plast(depth_SPDF_scaled, main_layer = "depth") +
+  #depth_bin_plast(depth_SPDF_scaled, main_layer = "depth") +
   driver_bin_plast(dist_river_SPDF_scaled, main_layer = "dist_river") +
   dcoast_bin_plast(dist_coast_SPDF_scaled, main_layer = "dist_coast") +
   dharbour_bin_plast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
@@ -233,7 +245,7 @@ cmp_joint <-    ~   -1 +
   v_bin_plast(v,main_layer = "v") + 
   logfe_bin_plast(logfe,main_layer = "logfe")+
   pop_radius_bin_plast(popRadius, main_layer = "popRadius")+
-  depth_bin_Nplast(depth_SPDF_scaled, main_layer = "depth") +
+  #depth_bin_Nplast(depth_SPDF_scaled, main_layer = "depth") +
   driver_bin_Nplast(dist_river_SPDF_scaled, main_layer = "dist_river") +
   dcoast_bin_Nplast(dist_coast_SPDF_scaled,  main_layer = "dist_coast") +
   dharbour_bin_Nplast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
@@ -291,7 +303,7 @@ formula_bin_plast <- z_plast ~
   v_bin_plast +
   logfe_bin_plast +   
   pop_radius_bin_plast +
-  offset(ssa)
+  log(ssa)
 
 #' This is monstrous
 formula_bin_Nplast <- z_Nplast ~
@@ -309,7 +321,7 @@ formula_bin_Nplast <- z_Nplast ~
   dharbour_bin_Nplast +
   logfe_bin_Nplast + 
   pop_radius_bin_Nplast +
-  offset(ssa)
+  log(ssa)
 
 
 
@@ -328,11 +340,13 @@ lik_gamma_Nplast <- bru_obs("gamma",
 lik_bin_plast <- bru_obs("binomial",
                          formula = formula_bin_plast,
                          samplers = border,
+                         control.family = list(link = "cloglog"),
                          domain = list(geometry = mesh),
                          data = df_scaled)
 lik_bin_Nplast <- bru_obs("binomial",
                           formula = formula_bin_Nplast,
                           samplers = border,
+                          control.family = list(link = "cloglog"),
                           domain = list(geometry = mesh),
                           data = df_scaled)
 
@@ -347,7 +361,7 @@ withCallingHandlers({
     cmp_joint,  lik_gamma_plast, lik_gamma_Nplast,
     lik_bin_plast, lik_bin_Nplast,
     options = list(  
-      control.predictor=list(link = 1),
+      #control.predictor=list(link = 1),
       control.compute = c.c,
       bru_max_iter=1, verbose = T, debug = T,
       num.threads = 1))
@@ -466,7 +480,3 @@ fit_joint_ccd$marginals.linear.predictor <-  NULL
 #' Be cautious here ==> rename according to covariates used
 fit_joint_ccd_alldists <- list(res=fit_joint_ccd, cv=lgocv_joint, exc=exc_joint)
 save(fit_joint_ccd_alldists, file = filename.joint)
-
-
-
-## 1794829 is without dcoast

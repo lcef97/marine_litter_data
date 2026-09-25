@@ -63,7 +63,6 @@ options(INLA.expert = FALSE)
 bru_options_set(bru_verbose = 1, debug = TRUE)
 options(error = function(e) {
   traceback(4)
-  quit(status=1)
 })
 c.c <- list(dic=TRUE, waic=TRUE, config=TRUE, cpo = TRUE, internal.opt = FALSE,
             return.marginals.predictor = TRUE)
@@ -175,7 +174,7 @@ mod.year <- list(theta=list(prior="loggamma",fixed = T, initial = log(0.001)))
 
 ##' Joint component. Includes literally everything.
 
-cmp_joint <-    ~   -1 +
+cmp_joint <-    ~    1 +
   ##' year - specific intercepts
   year_gamma_plast(year, model = "iid", hyper=mod.year) +
   year_gamma_Nplast(year, model = "iid", hyper=mod.year) +
@@ -207,6 +206,10 @@ cmp_joint <-    ~   -1 +
                     values = values, scale.model = TRUE) +
   depth_gamma_Nplast(depth_SPDF,  model = "rw2", main_layer = "depth",
                      values = values, scale.model = TRUE) +
+  depth_bin_plast(depth_SPDF,  model = "rw2", main_layer = "depth",
+                  values = values, scale.model = TRUE) +
+  depth_bin_Nplast(depth_SPDF,  model = "rw2", main_layer = "depth",
+                   values = values, scale.model = TRUE) +
   ##' linear covariates
   driver_gamma_plast(dist_river_SPDF_scaled,main_layer =   "dist_river") +
   dcoast_gamma_plast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
@@ -225,7 +228,7 @@ cmp_joint <-    ~   -1 +
   logfe_gamma_Nplast(logfe,main_layer = "logfe")+
   pop_radius_gamma_Nplast(popRadius, main_layer = "popRadius")+
   #
-  depth_bin_plast(depth_SPDF_scaled, main_layer = "depth") +
+  #depth_bin_plast(depth_SPDF_scaled, main_layer = "depth") +
   driver_bin_plast(dist_river_SPDF_scaled, main_layer = "dist_river") +
   dcoast_bin_plast(dist_coast_SPDF_scaled, main_layer = "dist_coast") +
   dharbour_bin_plast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
@@ -234,7 +237,7 @@ cmp_joint <-    ~   -1 +
   v_bin_plast(v,main_layer = "v") +
   logfe_bin_plast(logfe,main_layer = "logfe")+
   pop_radius_bin_plast(popRadius, main_layer = "popRadius")+
-  depth_bin_Nplast(depth_SPDF_scaled, main_layer = "depth") +
+  #depth_bin_Nplast(depth_SPDF_scaled, main_layer = "depth") +
   driver_bin_Nplast(dist_river_SPDF_scaled, main_layer = "dist_river") +
   dcoast_bin_Nplast(dist_coast_SPDF_scaled,  main_layer = "dist_coast") +
   dharbour_bin_Nplast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
@@ -243,7 +246,7 @@ cmp_joint <-    ~   -1 +
   v_bin_Nplast(v,main_layer = "v") +
   logfe_bin_Nplast(logfe,main_layer = "logfe") +
   pop_radius_bin_Nplast(popRadius, main_layer = "popRadius")
-
+ 
 
 
 ##' Formulas - adapted from above sections
@@ -277,7 +280,7 @@ formula_gamma_Nplast  <- y_Nplast ~
 
 
 #formula for z
-formula_bin_plast <- z_plast ~
+formula_bin_plast <-  z_plast ~
   year_bin_plast +
   field_z3 +
   depth_bin_plast +
@@ -323,11 +326,13 @@ lik_gamma_Nplast <- bru_obs("gamma",
 lik_bin_plast <- bru_obs("binomial",
                          formula = formula_bin_plast,
                          samplers = border,
+                         control.family=list(link="cloglog"),
                          domain = list(geometry = mesh),
                          data = df_scaled)
 lik_bin_Nplast <- bru_obs("binomial",
                           formula = formula_bin_Nplast,
                           samplers = border,
+                          control.family=list(link="cloglog"),
                           domain = list(geometry = mesh),
                           data = df_scaled)
 
@@ -342,7 +347,7 @@ withCallingHandlers({
     cmp_joint,  lik_gamma_plast, lik_gamma_Nplast,
     lik_bin_plast, lik_bin_Nplast,
     options = list(
-      control.predictor=list(link = 1),
+      #control.predictor=list(link = 1),
       control.compute = c.c,
       bru_max_iter=1, verbose = T, debug = T,
       num.threads = 1))

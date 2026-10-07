@@ -25,7 +25,8 @@ kmproj <- CRS("+proj=utm +zone=33  +ellps=WGS84 +units=km +no_defs")
 r0 <- raster(xmn= 450, ymn= 4000, xmx = 900,ymx = 4550, resolution = 1,
              crs = kmproj)
 
- 
+##' Load all needed data here 
+
 ##' Load all needed data here
 input.dir <- "Input"
 files <- list.files(input.dir, full.names = TRUE)
@@ -53,7 +54,7 @@ for (f in files) {
     stop(e)
   })
 }
-
+}
 
 ##' Options for INLA and inlabru ----------------------------------------------#
 ##' First, run without internal.opt=FALSE. This will
@@ -64,6 +65,7 @@ options(INLA.expert = FALSE)
 bru_options_set(bru_verbose = 1, debug = TRUE)
 options(error = function(e) {
   traceback(4)
+  quit(status=1)
 })
 c.c <- list(dic=TRUE, waic=TRUE, config=TRUE, cpo = TRUE, internal.opt = FALSE,
             return.marginals.predictor = TRUE)
@@ -142,19 +144,19 @@ get_xy <- function(df) cbind(df$x, df$y)
 mesh <- fmesher::fm_mesh_2d_inla(
   boundary = st_as_sf(border),
   loc= coord.df,
-  max.edge = c(13,30),
+  max.edge = c(6,30),
   min.angle = 25,
   cutoff = 5,
   offset = c(10, 40),
   crs = kmproj)
 
-prior.range <- c(100, .6)
-spde_gamma <- inla.spde2.pcmatern(mesh, prior.range = prior.range, #  Pr(practic.range<150 km)=0.5
-                                  prior.sigma = c(1, .1))  #  P(sigma>1)=0.5 
+prior.range <- c(25, .1)
+spde_gamma <- inla.spde2.pcmatern(mesh, prior.range = prior.range,
+                                  prior.sigma = c(1, .1))  
 
 
-spde_bin <- inla.spde2.pcmatern(mesh, prior.range = prior.range,  # Pr(practic.range<150 km)=0.5
-                                prior.sigma = c(1, .1))  #  P(sigma>1)=0.5 
+spde_bin <- inla.spde2.pcmatern(mesh, prior.range = prior.range,  
+                                prior.sigma = c(1, .1))   
 
 
 
@@ -206,9 +208,13 @@ cmp_joint <-    ~   -1 +
                     values = values, scale.model = TRUE) +
   depth_gamma_Nplast(depth_SPDF,  model = "rw2", main_layer = "depth",
                      values = values, scale.model = TRUE) +
+  depth_bin_plast(depth_SPDF,  model = "rw2", main_layer = "depth",
+                    values = values, scale.model = TRUE) +
+  depth_bin_Nplast(depth_SPDF,  model = "rw2", main_layer = "depth",
+                     values = values, scale.model = TRUE) +
   ##' linear covariates
   driver_gamma_plast(dist_river_SPDF_scaled,main_layer =   "dist_river") +
-  dcoast_gamma_plast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
+ # dcoast_gamma_plast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
   dharbour_gamma_plast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
   #slope_gamma_plast(slope_SPDF_scaled,main_layer = "slope") +
   u_gamma_plast(u,main_layer = "u") +
@@ -216,7 +222,7 @@ cmp_joint <-    ~   -1 +
   logfe_gamma_plast(logfe,main_layer = "logfe") +
   pop_radius_gamma_plast(popRadius, main_layer = "popRadius")+
   driver_gamma_Nplast(dist_river_SPDF_scaled,main_layer =   "dist_river") +
-  dcoast_gamma_Nplast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
+ # dcoast_gamma_Nplast(dist_coast_SPDF_scaled,main_layer = "dist_coast") +
   dharbour_gamma_Nplast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
   #slope_gamma_Nplast(slope_SPDF_scaled,main_layer = "slope") +
   u_gamma_Nplast(u,main_layer = "u") +
@@ -224,18 +230,18 @@ cmp_joint <-    ~   -1 +
   logfe_gamma_Nplast(logfe,main_layer = "logfe")+
   pop_radius_gamma_Nplast(popRadius, main_layer = "popRadius")+
   #
-  depth_bin_plast(depth_SPDF_scaled, main_layer = "depth") +
+  #depth_bin_plast(depth_SPDF_scaled, main_layer = "depth") +
   driver_bin_plast(dist_river_SPDF_scaled, main_layer = "dist_river") +
-  dcoast_bin_plast(dist_coast_SPDF_scaled, main_layer = "dist_coast") +
+ # dcoast_bin_plast(dist_coast_SPDF_scaled, main_layer = "dist_coast") +
   dharbour_bin_plast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
   #slope_bin_plast(slope_SPDF_scaled,  main_layer = "slope") +
   u_bin_plast(u,main_layer = "u") +
   v_bin_plast(v,main_layer = "v") + 
   logfe_bin_plast(logfe,main_layer = "logfe")+
   pop_radius_bin_plast(popRadius, main_layer = "popRadius")+
-  depth_bin_Nplast(depth_SPDF_scaled, main_layer = "depth") +
+  #depth_bin_Nplast(depth_SPDF_scaled, main_layer = "depth") +
   driver_bin_Nplast(dist_river_SPDF_scaled, main_layer = "dist_river") +
-  dcoast_bin_Nplast(dist_coast_SPDF_scaled,  main_layer = "dist_coast") +
+ # dcoast_bin_Nplast(dist_coast_SPDF_scaled,  main_layer = "dist_coast") +
   dharbour_bin_Nplast(dist_harbour_SPDF_scaled,main_layer = "dist_harbour") +
   #slope_bin_Nplast(slope_SPDF_scaled, main_layer = "slope") +
   u_bin_Nplast(u,main_layer = "u") +
@@ -252,7 +258,7 @@ formula_gamma_plast  <- y_plast ~
   field_z1 +
   depth_gamma_plast +
   driver_gamma_plast +
-  dcoast_gamma_plast +
+#  dcoast_gamma_plast +
   dharbour_gamma_plast +
   #slope_gamma_plast +
   pop_radius_gamma_plast +
@@ -267,7 +273,7 @@ formula_gamma_Nplast  <- y_Nplast ~
   field_common1 +
   depth_gamma_Nplast +
   driver_gamma_Nplast +
-  dcoast_gamma_Nplast +
+#  dcoast_gamma_Nplast +
   dharbour_gamma_Nplast +
   #slope_gamma_Nplast +
   pop_radius_gamma_Nplast +
@@ -285,13 +291,13 @@ formula_bin_plast <- z_plast ~
   depth_bin_plast + 
   #slope_bin_plast +
   driver_bin_plast + 
-  dcoast_bin_plast +  
+#  dcoast_bin_plast +  
   dharbour_bin_plast +
   u_bin_plast + 
   v_bin_plast +
   logfe_bin_plast +   
   pop_radius_bin_plast +
-  offset(ssa)
+  log(ssa)
 
 #' This is monstrous
 formula_bin_Nplast <- z_Nplast ~
@@ -305,11 +311,11 @@ formula_bin_Nplast <- z_Nplast ~
   driver_bin_Nplast +
   u_bin_Nplast + 
   v_bin_Nplast +
-  dcoast_bin_Nplast + 
+#  dcoast_bin_Nplast + 
   dharbour_bin_Nplast +
   logfe_bin_Nplast + 
   pop_radius_bin_Nplast +
-  offset(ssa)
+  log(ssa)
 
 
 
@@ -328,11 +334,13 @@ lik_gamma_Nplast <- bru_obs("gamma",
 lik_bin_plast <- bru_obs("binomial",
                          formula = formula_bin_plast,
                          samplers = border,
+                         control.family = list(link ="cloglog"),
                          domain = list(geometry = mesh),
                          data = df_scaled)
 lik_bin_Nplast <- bru_obs("binomial",
                           formula = formula_bin_Nplast,
                           samplers = border,
+                          control.family = list(link = "cloglog"),
                           domain = list(geometry = mesh),
                           data = df_scaled)
 
@@ -347,7 +355,7 @@ withCallingHandlers({
     cmp_joint,  lik_gamma_plast, lik_gamma_Nplast,
     lik_bin_plast, lik_bin_Nplast,
     options = list(  
-      control.predictor=list(link = 1),
+      #control.predictor=list(link = 1),
       control.compute = c.c,
       bru_max_iter=1, verbose = T, debug = T,
       num.threads = 1))
@@ -361,7 +369,7 @@ withCallingHandlers({
 })
 
 #' Be cautious here ==> rename according to covariates used
-filename.joint <- paste0("fit_joint_ccd_alldists", lubridate::today(), ".RData")
+filename.joint <- paste0("fit_joint_ccd_nodcoast", lubridate::today(), ".RData")
 
 filepath.rm <- file.path(getwd(), filename.joint)
 
@@ -385,45 +393,32 @@ lgocv_joint <- tryCatch({
   return(NULL)
 })
 
-pred_joint <- NULL
+## excursion sets - this code does not save samples
+
+lambda_plast <- lambda_Nplast <- NULL
 withCallingHandlers({
-  
+  ## sample over grid
   lambda_plast  <- generate(
     fit_joint_ccd, pxl_all_scaled,
     ~ exp(year_gamma_plast + field_z1 +depth_gamma_plast +
-            driver_gamma_plast + dcoast_gamma_plast + dharbour_gamma_plast +
+            driver_gamma_plast + 
+           # dcoast_gamma_plast +
+            dharbour_gamma_plast +
             #slope_gamma_plast +
             pop_radius_gamma_plast +u_gamma_plast + v_gamma_plast + logfe_gamma_plast),
-    verbose = T)
+    n.samples=1000)
 
   lambda_Nplast <- generate(
     fit_joint_ccd, pxl_all_scaled,
     ~ exp(year_gamma_Nplast + field_z2 + field_common1 + +depth_gamma_Nplast +
-            driver_gamma_Nplast + dcoast_gamma_Nplast + dharbour_gamma_Nplast +
+            driver_gamma_Nplast +
+           # dcoast_gamma_Nplast + 
+            dharbour_gamma_Nplast +
             #slope_gamma_Nplast +
             pop_radius_gamma_Nplast +u_gamma_Nplast + v_gamma_Nplast + logfe_gamma_Nplast), 
-    verbose = T)
-
-  lambda_plast_pred  <- predict(
-    fit_joint_ccd, df_scaled,
-    ~ exp(year_gamma_plast + field_z1 +depth_gamma_plast +
-            driver_gamma_plast + dcoast_gamma_plast + dharbour_gamma_plast +
-            #slope_gamma_plast +
-            pop_radius_gamma_plast +u_gamma_plast + v_gamma_plast + logfe_gamma_plast),
-    verbose = T)
-
-  lambda_Nplast_pred <- predict(
-    fit_joint_ccd, df_scaled,
-    ~ exp(year_gamma_Nplast + field_z2 + field_common2 +depth_gamma_Nplast +
-            driver_gamma_Nplast + dcoast_gamma_Nplast + dharbour_gamma_Nplast +
-            #slope_gamma_Nplast +
-            pop_radius_gamma_Nplast +u_gamma_Nplast + v_gamma_Nplast + logfe_gamma_Nplast), 
-    verbose = T)
-
-  pred_joint <- list(lambda_plast = lambda_plast, lambda_Nplast = lambda_Nplast,
-               lambda_plast_pred = lambda_plast_pred, 
-               lambda_Nplast_pred = lambda_Nplast_pred)
-}, error = function(e) {
+    n.samples=1000)
+   
+  }, error = function(e) {
   message("!!!!!!!!!!!!!!! \n!!! WARNING !!! \n!!! Author-added message: sampling literally failed, traceback follows")
   if (file.exists("crash_samples_joint_ccd.rda")) {
     message("removing extant crash_samples_joint_ccd")
@@ -433,15 +428,18 @@ withCallingHandlers({
 })
 
 excp <- excNp <- list()
+u.p <- 40
+u.np <- 20
 
 if(!is.null(lambda_plast)){
   aa <- data.frame(x = sf::st_coordinates(pxl_all)[,1],
                    y = sf::st_coordinates(pxl_all)[,2],
                    year = pxl_all$year,
                    lambda_plast)
+
   for (t in c(1:9, 11, 12)){
     excp[[length(excp)+1]] <- excursions.mc(aa[aa$year==as.character(t), -c(1:3)],
-                                            alpha = 0.05, u = 30, type = ">", verbose=T)
+                         alpha = 0.05, u = u.p, type = ">", verbose=T)  
     names(excp)[length(excp)] <- as.character(t)
   }
 }
@@ -453,20 +451,16 @@ if(!is.null(lambda_Nplast)){
                           lambda_Nplast)
   for (t in c(1:9, 11, 12)){
     excNp[[length(excNp)+1]] <- excursions.mc(aa_Nplast[aa_Nplast$year==as.character(t), -c(1:3)],,
-                                              alpha = 0.05, u = 30, type = ">", verbose=T)
+                                          alpha = 0.05, u = u.np, type = ">", verbose=T)  
     names(excNp)[length(excNp)] <- as.character(t)
   }
 }
 
-exc_joint <- list(excp = excp, excNp = excNp)
+exc_joint <- list(excp = excp, excNp = excNp, u = c(u.p, u.np) )
 
 fit_joint_ccd$misc$configs$config <- NULL
 fit_joint_ccd$marginals.linear.predictor <-  NULL
 
 #' Be cautious here ==> rename according to covariates used
-fit_joint_ccd_alldists <- list(res=fit_joint_ccd, cv=lgocv_joint, exc=exc_joint)
-save(fit_joint_ccd_alldists, file = filename.joint)
-
-
-
-## 1794829 is without dcoast
+fit_joint_ccd_nodcoast <- list(res=fit_joint_ccd, cv=lgocv_joint, exc=exc_joint)
+save(fit_joint_ccd_nodcoast, file = filename.joint)
